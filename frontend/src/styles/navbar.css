@@ -1,0 +1,218 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem clamp(1.25rem, 6vw, 7rem);
+  color: #fff;
+  background: linear-gradient(
+    110deg,
+    var(--color-primary),
+    var(--color-primary-medium) 52%,
+    var(--color-primary-light)
+  );
+  box-shadow: 0 8px 24px rgb(34 89 215 / 18%);
+  animation: slide-down 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.25rem;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+}
+.brand > span:last-child span {
+  color: #bfeaff;
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 1px solid rgb(255 255 255 / 45%);
+  border-radius: 0.7rem;
+  background: rgb(255 255 255 / 15%);
+}
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.75rem);
+}
+.navbar-links a:not(.button) {
+  font-size: 0.92rem;
+  font-weight: 650;
+  opacity: 0.92;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.78rem 1.15rem;
+  font-weight: 750;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.button:hover {
+  transform: translateY(-2px);
+}
+.button--navbar {
+  color: var(--color-primary);
+  background: #fff;
+  box-shadow: 0 6px 16px rgb(20 70 165 / 22%);
+}
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 780px) {
+  .navbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .navbar-links {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .navbar-links a:not(.button) {
+    display: none;
+  }
+}
+
+/* ══════════════════════════════════════════
+   Navbar — variante Dashboard
+══════════════════════════════════════════ */
+.navbar--dashboard {
+  background: #fff;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 2px 16px rgb(34 89 215 / 7%);
+  animation: none; /* sin slide-down en el dashboard */
+}
+
+/* Marca en modo claro */
+.brand--dashboard {
+  color: var(--color-primary);
+}
+
+.brand--dashboard .brand-mark {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  border-color: transparent;
+  color: #fff;
+}
+
+.brand-text {
+  font-size: 1.25rem;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+  color: var(--color-primary);
+}
+
+.brand-shop {
+  color: var(--color-primary-light) !important;
+}
+
+/* Espaciador */
+.navbar-spacer {
+  flex: 1;
+}
+
+/* Grupo derecho */
+.navbar-dashboard-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* Welcome pill */
+.navbar-welcome {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.navbar-welcome__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 850;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  box-shadow: 0 4px 10px rgb(34 89 215 / 22%);
+  flex-shrink: 0;
+}
+
+.navbar-welcome__text {
+  display: grid;
+  gap: 0.05rem;
+}
+
+.navbar-welcome__text small {
+  color: #8898b0;
+  font-size: 0.68rem;
+}
+
+.navbar-welcome__text strong {
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+/* Divider */
+.navbar-divider {
+  width: 1px;
+  height: 1.75rem;
+  background: var(--color-border);
+}
+
+/* Botón cerrar sesión */
+.button--logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.62rem 1rem;
+  border-radius: 0.6rem;
+  border: 1px solid #f0d4d4;
+  color: #c0392b;
+  font-size: 0.82rem;
+  font-weight: 750;
+  background: #fff5f5;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.button--logout:hover {
+  background: #ffe3e3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgb(192 57 43 / 14%);
+}
+
+.logout-icon {
+  font-size: 1rem;
+  transform: scaleX(-1);
+  display: inline-block;
+}
+
+@media (max-width: 780px) {
+  .navbar--dashboard {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .navbar-welcome__text {
+    display: none;
+  }
+  .navbar-spacer {
+    display: none;
+  }
+}

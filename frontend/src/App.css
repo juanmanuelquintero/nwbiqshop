@@ -1,0 +1,16 @@
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+}
+.page-placeholder {
+  width: min(100% - 2.5rem, 900px);
+  margin: 4rem auto;
+  padding: 3rem;
+  border-radius: 1rem;
+  background: var(--color-surface);
+}
+.page-placeholder h1 {
+  margin-top: 0;
+}

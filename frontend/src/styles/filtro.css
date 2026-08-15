@@ -1,0 +1,48 @@
+.contenedor-filtro {
+  width: auto;
+  position: relative;
+}
+
+.filtro {
+  position: absolute;
+  top: 110%;
+  left: 0%;
+  width: 100%;
+  height: auto;
+  padding: 5px;
+  background-color: rgb(255, 255, 255);
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.273);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seleccionar-ciudad:hover {
+  background-color: #bfeaffc2;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.cc-field-input {
+  width: 100%;
+  padding: 0.72rem 0.88rem;
+  border: 1px solid #d8e3f2;
+  border-radius: 0.6rem;
+  outline: none;
+  color: var(--color-text);
+  background: #fff;
+  resize: vertical;
+  transition:
+    border-color 0.22s,
+    box-shadow 0.22s,
+    transform 0.22s;
+}
+
+.cc-field-input:focus {
+  border-color: var(--color-primary-light);
+  box-shadow:
+    0 0 0 4px rgb(53 164 236 / 15%),
+    0 9px 18px rgb(34 89 215 / 8%);
+  transform: translateY(-1px);
+}

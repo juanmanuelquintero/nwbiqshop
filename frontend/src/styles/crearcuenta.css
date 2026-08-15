@@ -1,0 +1,567 @@
+/* ═══════════════════════════════════════════
+   Crear Cuenta — Estilos completos
+   Alineados con el design system del proyecto
+═══════════════════════════════════════════ */
+
+/* ── Layout principal ── */
+.cc-page {
+  display: grid;
+  grid-template-columns: minmax(0, 0.93fr) minmax(0, 1.07fr);
+  min-height: calc(100vh - 72px);
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════
+   ASIDE – columna izquierda (beneficios)
+══════════════════════════════════════════ */
+.cc-aside {
+  position: relative;
+  z-index: 1;
+  padding: clamp(3rem, 6vw, 7rem);
+  color: #fff;
+  background: linear-gradient(
+    145deg,
+    var(--color-primary),
+    var(--color-primary-medium) 60%,
+    var(--color-primary-light)
+  );
+  overflow: hidden;
+}
+
+.cc-aside .eyebrow {
+  margin: 0 0 0.6rem;
+  color: #d6f0ff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cc-aside h1 {
+  margin: 0 0 1.2rem;
+  font-size: clamp(2.6rem, 4vw, 4.4rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.cc-aside h1 span {
+  color: #bfeaff;
+}
+
+.cc-aside__desc {
+  max-width: 28rem;
+  margin: 0 0 2.6rem;
+  color: rgb(255 255 255 / 82%);
+  line-height: 1.7;
+  font-size: 0.97rem;
+}
+
+/* Lista de features */
+.cc-feature-list {
+  display: grid;
+  gap: 1.25rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.cc-feature-list > li {
+  display: flex;
+  gap: 0.95rem;
+  align-items: flex-start;
+}
+
+.cc-feature-list > li > span {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 0.6rem;
+  color: #d5efff;
+  font-size: 0.62rem;
+  font-weight: 850;
+  background: rgb(255 255 255 / 12%);
+  flex-shrink: 0;
+}
+
+.cc-feature-list > li > p {
+  display: grid;
+  gap: 0.18rem;
+  margin: 0;
+}
+
+.cc-feature-list strong {
+  font-size: 0.95rem;
+}
+
+.cc-feature-list small {
+  color: rgb(255 255 255 / 72%);
+  font-size: 0.82rem;
+}
+
+/* Badge inferior */
+.cc-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(100%, 19rem);
+  margin-top: 3.5rem;
+  padding: 1rem;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 0.9rem;
+  background: rgb(11 60 151 / 22%);
+  box-shadow: 0 18px 35px rgb(10 48 120 / 17%);
+  backdrop-filter: blur(12px);
+  animation: float-tag 5s ease-in-out infinite;
+}
+
+.cc-badge__dot {
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #b8edff, #fff);
+  flex-shrink: 0;
+}
+
+.cc-badge > div {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.cc-badge small {
+  color: #d4efff;
+  font-size: 0.72rem;
+}
+
+.cc-badge strong {
+  font-size: 0.95rem;
+}
+
+.cc-badge > b {
+  margin-left: auto;
+  font-size: 1.2rem;
+}
+
+@keyframes float-tag {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Decoraciones circulares */
+.cc-aside__decoration {
+  position: absolute;
+  z-index: 0;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.cc-aside__decoration--one {
+  width: 29rem;
+  height: 29rem;
+  left: -15rem;
+  bottom: -18rem;
+}
+
+.cc-aside__decoration--two {
+  width: 19rem;
+  height: 19rem;
+  left: 19%;
+  top: -12rem;
+}
+
+/* ══════════════════════════════════════════
+   FORM AREA – columna derecha
+══════════════════════════════════════════ */
+.cc-form-area {
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background:
+    radial-gradient(circle at 85% 12%, #e2f3ff, transparent 19rem), #f7fbff;
+  overflow-y: auto;
+}
+
+/* Tarjeta del formulario */
+.cc-card {
+  width: min(100%, 34rem);
+  padding: clamp(1.75rem, 4vw, 2.4rem);
+  border: 1px solid rgb(215 229 247 / 90%);
+  border-radius: 1.25rem;
+  background: rgb(255 255 255 / 93%);
+  box-shadow:
+    0 24px 65px rgb(28 77 145 / 15%),
+    0 3px 12px rgb(35 89 215 / 7%);
+  backdrop-filter: blur(16px);
+  animation: cc-modal-pop 0.7s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cc-modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.94);
+  }
+  65% {
+    transform: translateY(-3px) scale(1.01);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Cabecera de la tarjeta */
+.cc-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.cc-auth-badge {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.7rem;
+  color: #fff;
+  font-weight: 850;
+  font-size: 1rem;
+  background: linear-gradient(
+    145deg,
+    var(--color-primary),
+    var(--color-primary-light)
+  );
+  box-shadow: 0 8px 16px rgb(34 89 215 / 22%);
+  flex-shrink: 0;
+}
+
+.cc-card__header > div > p {
+  margin: 0 0 0.2rem;
+  color: #718098;
+  font-size: 0.75rem;
+}
+
+.cc-card__header > div > h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.25rem;
+  letter-spacing: -0.035em;
+}
+
+.cc-card__header h2 span {
+  color: var(--color-primary);
+}
+
+/* ── Barra de progreso ── */
+.cc-progress-bar {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--color-border);
+  overflow: hidden;
+  margin-bottom: 0.55rem;
+}
+
+.cc-progress-bar__fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary),
+    var(--color-primary-light)
+  );
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cc-step-label {
+  margin: 0 0 1.4rem;
+  color: #718098;
+  font-size: 0.78rem;
+}
+
+.cc-step-label strong {
+  color: var(--color-text);
+}
+
+/* ── Campos ── */
+.cc-fields__hint {
+  margin: 0 0 1rem;
+  color: #718098;
+  font-size: 0.78rem;
+}
+
+.cc-required {
+  color: #e0405a;
+  font-weight: 700;
+}
+
+.cc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.cc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+}
+
+.cc-field--full {
+  grid-column: 1 / -1;
+}
+
+.cc-field label {
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.cc-field-input {
+  width: 100%;
+  padding: 0.72rem 0.88rem;
+  border: 1px solid #d8e3f2;
+  border-radius: 0.6rem;
+  outline: none;
+  color: var(--color-text);
+  background: #fff;
+  resize: vertical;
+  transition:
+    border-color 0.22s,
+    box-shadow 0.22s,
+    transform 0.22s;
+}
+
+.cc-field-input:focus {
+  border-color: var(--color-primary-light);
+  box-shadow:
+    0 0 0 4px rgb(53 164 236 / 15%),
+    0 9px 18px rgb(34 89 215 / 8%);
+  transform: translateY(-1px);
+}
+
+.cc-checkbox {
+  width: 18px;
+  height: 18px;
+
+  appearance: none;
+
+  border: 1px solid #d8e3f2;
+  border-radius: 0.4rem;
+
+  background: #fff;
+
+  cursor: pointer;
+
+  transition:
+    background 0.22s,
+    border-color 0.22s,
+    box-shadow 0.22s,
+    transform 0.22s;
+
+  position: relative;
+}
+.cc-checkbox:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+
+  box-shadow:
+    0 0 0 4px rgb(53 164 236 / 15%),
+    0 6px 14px rgb(34 89 215 / 15%);
+
+  transform: translateY(-1px);
+}
+
+.cc-checkbox:checked::after {
+  content: "";
+
+  position: absolute;
+
+  left: 5px;
+  top: 2px;
+
+  width: 5px;
+  height: 9px;
+
+  border: solid white;
+  border-width: 0 2px 2px 0;
+
+  transform: rotate(45deg);
+}
+
+.cc-checkbox:hover {
+  border-color: var(--color-primary-light);
+
+  box-shadow: 0 0 0 3px rgb(53 164 236 / 10%);
+}
+
+/* Ajuste para el componente Busquedainput */
+.cc-field .contenedor-filtro {
+  width: 100%;
+}
+
+.cc-field .contenedor-filtro input {
+  width: 100%;
+}
+
+/* ── Navegación / botones ── */
+.cc-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.8rem;
+  gap: 1rem;
+}
+
+.cc-step-indicator {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.cc-step-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--color-border);
+  transition:
+    background 0.3s,
+    transform 0.3s;
+}
+
+.cc-step-dot--done {
+  background: var(--color-primary-medium);
+}
+
+.cc-step-dot--active {
+  background: var(--color-primary);
+  transform: scale(1.35);
+}
+
+.cc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: none;
+  border-radius: 0.65rem;
+  padding: 0.75rem 1.2rem;
+  font-size: 0.87rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.cc-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.cc-btn--ghost {
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid var(--color-border);
+}
+
+.cc-btn--ghost:not(:disabled):hover {
+  background: var(--color-surface);
+  transform: translateY(-2px);
+}
+
+.cc-btn--primary {
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-light)
+  );
+  box-shadow: 0 6px 18px rgb(34 89 215 / 25%);
+}
+
+.cc-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgb(34 89 215 / 32%);
+}
+
+.cc-btn--submit {
+  color: #fff;
+  background: linear-gradient(135deg, #1d8a5c, #27c47f);
+  box-shadow: 0 6px 18px rgb(29 138 92 / 28%);
+}
+
+.cc-btn--submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgb(29 138 92 / 36%);
+}
+
+/* ── Enlace a login ── */
+.cc-login-hint {
+  margin: 1.25rem 0 0;
+  color: #68758c;
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.cc-login-hint a {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.cc-login-hint a:hover {
+  text-decoration: underline;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .cc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 780px) {
+  .cc-page {
+    grid-template-columns: 1fr;
+  }
+
+  .cc-aside {
+    padding: 3rem 1.5rem;
+  }
+
+  .cc-aside h1 {
+    font-size: 2.6rem;
+  }
+
+  .cc-aside__desc {
+    margin-bottom: 1.8rem;
+  }
+
+  .cc-feature-list,
+  .cc-badge {
+    display: none;
+  }
+
+  .cc-form-area {
+    padding: 3rem 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

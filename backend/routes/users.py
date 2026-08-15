@@ -1,0 +1,44 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from schemas.users import UseryshopCreate, UserLogin
+from config_db import get_db
+from services.users import crearusuario, validarusuario
+from services.shop import crear_tienda
+
+router = APIRouter()
+
+@router.post("/crear-cuenta")
+def Crear_Cuenta(datos: UseryshopCreate, db: Session = Depends(get_db)):
+    datosUsuario = {
+        "cedula": datos.cedula,
+        "nombres": datos.nombres,
+        "apellidos": datos.apellidos,
+        "ciudad": datos.ciudad,
+        "direccion": datos.direccion,
+        "fecha_nacimieno": datos.fecha_nacimieno,
+        "correo": datos.correo,
+        "telefono": datos.telefono,
+        "contraseña": datos.contraseña
+    }
+
+    crearusuario(db, datosUsuario)
+
+    datosShop = {
+        "usuario_id": datos.cedula,
+        "nombre": datos.nombre,
+        "dominio": datos.dominio,
+        "descripcion": datos.descripcion,
+        "sueldo_mensual": datos.sueldo_mensual,
+        "actividad": datos.actividad,
+        "pasarela_pagos": datos.pasarela_pagos,
+        "direccion": datos.direccion,
+        "telefono": datos.telefono
+    }
+
+    crear_tienda(db, datosShop)
+
+    return "cuenta creada"
+
+@router.post("/validar-usuario")
+def validar(datos: UserLogin, db: Session = Depends(get_db)):
+    return validarusuario(db, datos)
