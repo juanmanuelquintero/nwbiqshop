@@ -6,6 +6,7 @@ from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException
 import jwt
 from config import settings
+from models.shop import Shop
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -20,14 +21,21 @@ def crearusuario(db, datos):
         ).first()
     
     if buscaremail:
-        raise HTTPException(status=400, detail="error el email ya esta en uso")
+        raise HTTPException(status_code=400, detail=f"error el email {datos["correo"]} ya esta en uso")
 
     buscarphone = db.query(Users).filter(
                 Users.telefono == datos["telefono"]
             ).first()
         
     if buscarphone:
-        raise HTTPException(status=400, detail="error el telefono ya esta en uso")
+        raise HTTPException(status_code=400, detail="error el telefono ya esta en uso")
+
+    buscardominio = db.query(Shop).filter(
+            Shop.dominio == datos["dominio"]
+        ).first()
+    
+    if buscardominio:
+        raise HTTPException(status_code=400, detail="error el dominio ya existe")
 
     nuevouser = Users(
         cedula=datos["cedula"],
@@ -76,4 +84,92 @@ def validarusuario(db, datos):
     return {
         "status": "success",
         "token": token
+    }
+
+def modificarusuario(db, datos):
+    buscarusuario = db.query(Users).filter(
+        Users.cedula == datos.id_usuario
+    ).first()
+
+    if not buscarusuario:
+        raise HTTPException(status_code=400, detail="error no existe el usuario a modificar")
+
+    if datos.nombres is not None:
+        buscarusuario.nombres = datos.nombres
+
+    if datos.apellidos is not None:
+            buscarusuario.apellidos = datos.apellidos
+
+    if datos.ciudad is not None:
+            buscarusuario.ciudad = datos.ciudad
+
+    if datos.direccion is not None:
+            buscarusuario.direccion = datos.direccion
+
+    if datos.fecha_nacimieno is not None:
+            buscarusuario.fecha_nacimieno = datos.fecha_nacimieno
+
+    if datos.correo is not None:
+            if buscarusuario.correo != datos.correo:
+                buscarcorreo = db.query(Users).filter(
+                    Users.correo == datos.correo
+                ).first()
+                if buscarcorreo:
+                    raise HTTPException(status_code=400, detail="error el correo ya esta en uso")
+                
+            buscarusuario.correo = datos.correo
+
+    if datos.telefono is not None:
+            if buscarusuario.telefono != datos.telefono:
+                buscartelefono = db.query(Users).filter(
+                    Users.telefono == datos.telefono
+                ).first()
+                if buscartelefono:
+                        raise HTTPException(status_code=400, detail="error el telefono ya esta en uso")
+            buscarusuario.telefono = datos.telefono
+
+    db.commit()
+    db.refresh(buscarusuario)
+
+    return "usuario modificado"
+
+
+def cambiarcontraseña(db, datos):
+    buscarusuario = db.query(Users).filter(
+          Users.cedula == datos.id_usuario
+    ).first()
+
+    if not buscarusuario:
+        raise HTTPException(status_code=400, detail="error no existe el usuario a modificar")
+
+    if not pwd_context.verify(datos.contraseña, buscarusuario.contraseña):
+            raise HTTPException(status_code=400, detail="contraseña incorrecta")
+
+    if len(datos.contraseñanueva) < 8 or len(datos.contraseñanueva) > 15:
+        raise HTTPException(status_code=400, detail="La contraseña debe tener mínimo 8 y máximo 15 caracteres")
+
+    contranueva = pwd_context.hash(datos.contraseñanueva)
+
+    buscarusuario.contraseña = contranueva
+
+    db.commit()
+    db.refresh(buscarusuario)
+
+    return "contraseña cambiada"
+
+
+def traerusuario(db, cedula: int):
+    usuario = db.query(Users).filter(Users.cedula == cedula).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return {
+        "cedula": usuario.cedula,
+        "nombres": usuario.nombres,
+        "apellidos": usuario.apellidos,
+        "ciudad": usuario.ciudad,
+        "direccion": usuario.direccion,
+        "fecha_nacimieno": str(usuario.fecha_nacimieno),
+        "correo": usuario.correo,
+        "telefono": usuario.telefono,
+        "rol": usuario.rol,
     }

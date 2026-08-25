@@ -42,4 +42,6 @@ class Shop(Base):
 
     telefono = Column(String(20),nullable=True)
 
+    plantilla = Column (Integer, default=1, nullable=False)
+
     usuario = relationship("Users", backref="shop")

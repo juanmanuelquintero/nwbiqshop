@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 # Modificar tienda
 class ShopUpdate(BaseModel):
+    id_usuario: int
     nombre: str | None = None
     dominio: str | None = None
     descripcion: str | None = None

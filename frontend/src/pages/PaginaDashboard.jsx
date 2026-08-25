@@ -31,7 +31,7 @@ const SECTIONS = [
       "Consulta el stock disponible, recibe alertas de agotamiento y actualiza cantidades fácilmente.",
     tag: "Stock",
     stat: "3 alertas",
-    nav: "/dashboard/productos",
+    nav: "/dashboard/inventario",
   },
   {
     id: "colecciones",
@@ -43,7 +43,7 @@ const SECTIONS = [
       "Agrupa tus productos en colecciones temáticas para que tus clientes encuentren lo que buscan.",
     tag: "Organización",
     stat: "5 colecciones",
-    nav: "/dashboard/productos",
+    nav: "/dashboard/colecciones",
   },
   {
     id: "estilos",
@@ -55,7 +55,7 @@ const SECTIONS = [
       "Personaliza colores, tipografía, banner y el aspecto general de tu vitrina online.",
     tag: "Diseño",
     stat: "1 tema activo",
-    nav: "/dashboard/productos",
+    nav: "/dashboard/estilos",
   },
   {
     id: "opciones",
@@ -67,7 +67,29 @@ const SECTIONS = [
       "Configura los datos de tu tienda, métodos de contacto, redes sociales y más ajustes generales.",
     tag: "Config",
     stat: "",
-    nav: "/dashboard/productos",
+    nav: "/dashboard/opciones",
+  },
+  {
+    id: "promociones",
+    icon: "🔥",
+    color: "#bd0065",
+    bg: "#ffe6f3",
+    title: "Promociones",
+    description: "Gestiona las promociones y descuentos de tu tienda.",
+    tag: "prom",
+    stat: "",
+    nav: "/dashboard/promociones",
+  },
+  {
+    id: "pedidos",
+    icon: "🚚",
+    color: "#9700bd",
+    bg: "#fde6ff",
+    title: "Pedidos",
+    description: "Mira los pedidos que te hicieron en tu tienda.",
+    tag: "ped",
+    stat: "3 pedidos",
+    nav: "/dashboard/pedidos",
   },
 ];
 
@@ -124,7 +146,8 @@ function PaginaDashboard() {
   const [dominio, setdominio] = useState("tu-tienda");
   const [nametienda, setnametienda] = useState("tu tienda");
   const [estado, setestado] = useState(false);
-  const STORE_URL = `http://localhost:8000/tiendas?=${dominio}`;
+  const navigate = useNavigate();
+  const STORE_URL = `http://localhost:8000/tienda/${dominio}`;
 
   const copyUrl = () => {
     navigator.clipboard.writeText(STORE_URL);
@@ -136,7 +159,7 @@ function PaginaDashboard() {
       const res = await TraerTienda(user);
       setdominio(res.data?.dominio || "tu-tienda");
       setestado(res.data?.estado || false);
-      setnametienda(res.data?.tienda || "tu tienda");
+      setnametienda(res.data?.nombre || "tu tienda");
     } catch (err) {
       mostrarAlerta(
         "error",
@@ -217,7 +240,11 @@ function PaginaDashboard() {
             >
               <span>⧉</span> Copiar
             </button>
-            <button className="db-url-visit" disabled={!estado}>
+            <button
+              className="db-url-visit"
+              disabled={!estado}
+              onClick={() => navigate(`/tienda/${dominio}`)}
+            >
               Visitar <span aria-hidden="true">↗</span>
             </button>
           </div>

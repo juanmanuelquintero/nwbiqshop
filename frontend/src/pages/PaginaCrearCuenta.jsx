@@ -85,8 +85,7 @@ function CrearCuenta() {
       !dominio ||
       !descripcion ||
       !sueldoMensual ||
-      !actividad ||
-      !pasarelaPagos
+      !actividad
     ) {
       return mostrarAlerta("info", "Llene todos los campos obligatorios");
     }
@@ -98,10 +97,10 @@ function CrearCuenta() {
       );
     }
 
-    if (contraseña.length < 8 || contraseña.length > 10) {
+    if (contraseña.length < 8 || contraseña.length > 15) {
       return mostrarAlerta(
         "info",
-        "La contraseña debe tener minimo 8 caracteres y maximo 10",
+        "La contraseña debe tener minimo 8 caracteres y maximo 15",
       );
     }
 
@@ -141,7 +140,8 @@ function CrearCuenta() {
     } catch (err) {
       mostrarAlerta(
         "error",
-        "Hubo un error al intentar crear la cuenta, intentalo mas tarde",
+        err.response?.data?.detail ||
+          "Hubo un error al intentar crear la cuenta, intentalo mas tarde",
       );
     }
   };
@@ -457,7 +457,7 @@ function CrearCuenta() {
                       type="checkbox"
                       className="cc-checkbox"
                       checked={pasarelaPagos}
-                      onChange={(e) => pasarelaPagos(e.target.checked)}
+                      onChange={(e) => setPasarelaPagos(e.target.checked)}
                     />
                   </section>
                   <section className="cc-field">

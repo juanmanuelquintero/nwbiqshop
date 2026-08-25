@@ -96,6 +96,42 @@ function Navbar({ id, userName }) {
           </div>
         </header>
       );
+    case 4:
+      return (
+        <header className="navbar navbar--dashboard">
+          {/* Marca */}
+          <NavLink
+            className="brand brand--dashboard"
+            to="/"
+            aria-label="NWBIQShop, ir al panel"
+          >
+            <span className="brand-mark">N</span>
+            <span className="brand-text">
+              NWBIQ<span className="brand-shop">Shop</span>
+            </span>
+          </NavLink>
+
+          {/* Centro vacío — espacio flexible */}
+          <div className="navbar-spacer" />
+
+          {/* Lado derecho */}
+          <div className="navbar-dashboard-right">
+            <div className="navbar-welcome">
+              <div className="navbar-welcome__text">
+                <small>Tenemos cosas preparadas para ti</small>
+              </div>
+            </div>
+            <div className="navbar-divider" />
+            <div
+              className="button button--logout"
+              onClick={() => navigate("/")}
+            >
+              <span className="logout-icon">↪</span>
+              Visita Nuestro sitio
+            </div>
+          </div>
+        </header>
+      );
   }
 }
 

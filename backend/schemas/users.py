@@ -24,6 +24,7 @@ class UseryshopCreate(BaseModel):
 
 # Modificar usuario
 class UserUpdate(BaseModel):
+    id_usuario: int
     nombres: str | None = None
     apellidos: str | None = None
     ciudad: str | None = None
@@ -31,10 +32,14 @@ class UserUpdate(BaseModel):
     fecha_nacimieno: date | None = None
     correo: str | None = None
     telefono: str | None = None
-    contraseña: str | None = None
 
 
 # Iniciar sesión
 class UserLogin(BaseModel):
     correo: str
     contraseña: str
+
+class Usercontraseñaupdate(BaseModel):
+    id_usuario: int
+    contraseña: str
+    contraseñanueva: str

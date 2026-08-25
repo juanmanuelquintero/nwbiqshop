@@ -23,10 +23,6 @@ class Producto(Base):
 
     estado = Column(Boolean, default=True, nullable=False)
 
-    imagen1 = Column(String(300), nullable=True)
-
-    imagen2 = Column(String(300), nullable=True)
-
     creado_fecha = Column(
         DateTime,
         default=datetime.now(),
@@ -50,10 +46,17 @@ class ProductoSimple(Base):
         unique=True
     )
 
+    marca = Column(String(100), nullable=True)
+
+    referencia = Column(String(100), nullable=True)
+
     cantidad = Column(Integer, nullable=False, default=0)
 
-class ProductoVariante(Base):
-    __tablename__ = "productos_variantes"
+    imagen = Column(String(250), nullable=True)
+
+
+class ProductoColores(Base):
+    __tablename__ = "productos_colores"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
 
@@ -64,8 +67,26 @@ class ProductoVariante(Base):
         index=True
     )
 
-    talla = Column(String(30), nullable=True)
-
     color = Column(String(50), nullable=True)
+
+    marca = Column(String(100), nullable=True)
+
+    referencia = Column(String(100), nullable=True)
+
+    imagen = Column(String(250), nullable=True)
+
+class ProductoVariante(Base):
+    __tablename__ = "productos_variantes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+
+    producto_idcolor = Column(
+        Integer,
+        ForeignKey("productos_colores.id"),
+        nullable=False,
+        index=True
+    )
+
+    talla = Column(String(30), nullable=True)
 
     cantidad = Column(Integer, nullable=False, default=0)

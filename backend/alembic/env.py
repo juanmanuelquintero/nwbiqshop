@@ -8,6 +8,10 @@ from config_db import Base
 from models.users import Users
 from models.shop import Shop
 from models.products import Producto, ProductoSimple, ProductoVariante
+from models.collections import Coleccion, ColeccionProducto
+from models.styles import Estilos
+from models.promociones import Promocion, PromocionProducto, PromocionUnitaria
+from models.pedidos import Pedido, PedidoProducto
 
 
 target_metadata = Base.metadata

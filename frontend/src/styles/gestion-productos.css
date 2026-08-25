@@ -1041,3 +1041,155 @@
     grid-column: 1 / -1;
   }
 }
+
+/* ── Botones de estado en tabla ── */
+.gp-icon-btn--activate {
+  background: #d8f8e7;
+}
+.gp-icon-btn--activate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgb(15 124 91 / 18%);
+}
+.gp-icon-btn--deactivate {
+  background: #fff3cd;
+}
+.gp-icon-btn--deactivate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgb(180 83 9 / 18%);
+}
+
+/* ── Botones de estado en modal ── */
+.gp-btn--activate {
+  color: #fff;
+  background: linear-gradient(135deg, #0f7c5b, #27c47f);
+  box-shadow: 0 6px 16px rgb(15 124 91 / 28%);
+}
+.gp-btn--activate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgb(15 124 91 / 36%);
+}
+.gp-btn--deactivate {
+  color: #fff;
+  background: linear-gradient(135deg, #b45309, #f59e0b);
+  box-shadow: 0 6px 16px rgb(180 83 9 / 25%);
+}
+.gp-btn--deactivate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgb(180 83 9 / 32%);
+}
+
+/* ══════════════════════════════════════════
+   MODAL GRANDE (crear producto)
+══════════════════════════════════════════ */
+.gp-modal--lg {
+  width: min(100%, 68rem);
+  max-height: 92vh;
+}
+
+/* Row con 2 columnas para campos comunes */
+.gp-modal__row--2 {
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+/* ══════════════════════════════════════════
+   UPLOAD DE IMAGEN
+══════════════════════════════════════════ */
+.gp-img-upload {
+  display: block;
+  cursor: pointer;
+}
+
+.gp-img-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 7rem;
+  border: 2px dashed #d8e3f2;
+  border-radius: 0.65rem;
+  background: #f8fbff;
+  transition: border-color 0.2s, background 0.2s;
+}
+.gp-img-upload:hover .gp-img-placeholder {
+  border-color: var(--color-primary-light);
+  background: #eef5ff;
+}
+.gp-img-placeholder span {
+  font-size: 1.6rem;
+  opacity: 0.55;
+}
+.gp-img-placeholder small {
+  font-size: 0.72rem;
+  color: #8898b0;
+  font-weight: 600;
+}
+
+.gp-img-preview {
+  position: relative;
+  height: 7rem;
+  border-radius: 0.65rem;
+  overflow: hidden;
+  border: 1px solid #d8e3f2;
+}
+.gp-img-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gp-img-preview__remove {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: none;
+  background: rgb(0 0 0 / 55%);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s;
+}
+.gp-img-preview__remove:hover {
+  background: #c0392b;
+}
+
+/* ══════════════════════════════════════════
+   VARIANTE BUILDER AMPLIADO
+══════════════════════════════════════════ */
+.gp-variante-builder--lg {
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  align-items: flex-end;
+}
+
+.gp-btn--add-variant-bottom {
+  align-self: flex-end;
+  grid-column: span 1;
+}
+
+/* Miniatura en el tag de variante */
+.gp-variante-tag__img {
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 0.3rem;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* Responsive builder */
+@media (max-width: 720px) {
+  .gp-variante-builder--lg {
+    grid-template-columns: 1fr 1fr;
+  }
+  .gp-btn--add-variant-bottom {
+    grid-column: 1 / -1;
+  }
+}
+
+.gp-img-wrapper {
+  display: inline-flex;
+}

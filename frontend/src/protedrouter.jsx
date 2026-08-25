@@ -11,14 +11,12 @@ function ProtedRouter({ roles, children }) {
 
   const rol = jwtDecode(token);
   if (!rol.rol) {
-    console.log(rol);
     return <Navigate to={"/"} />;
   }
 
   if (roles.includes(rol.rol)) {
     return children;
   }
-  console.log(rol);
   return <Navigate to={"/"} />;
 }
 

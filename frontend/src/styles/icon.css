@@ -1,0 +1,4 @@
+.icon-hover:hover {
+  transform: translateY(-3px);
+  cursor: pointer;
+}
