@@ -11,11 +11,16 @@ import PaginaEstilos from "./pages/PaginaEstilos.jsx";
 import PaginaOpciones from "./pages/PaginaOpciones.jsx";
 import PaginaPromociones from "./pages/PaginaPromociones.jsx";
 import PaginaPedidos from "./pages/PaginaPedidos.jsx";
+import PaginaAlimentos from "./pages/PaginaAlimentos.jsx";
+import PaginaColeccionAlimentos from "./pages/PaginaColeccionAlimentos.jsx";
+import PaginaPedidosAlimentos from "./pages/PaginaPedidosAlimentos.jsx";
+import PaginaCombos from "./pages/PaginaCombos.jsx";
 import "./App.css";
 import Protedrouter from "./protedrouter.jsx";
-import Tienda from "./pages/Tienda.jsx";
 import Catalogosplantillas from "./pages/Catalogoplantillas.jsx";
-import Plantilla2 from "./themes/Plantilla2.jsx";
+import BuscarPedidos from "./pages/BuscarPedidos.jsx";
+import TuInformacion from "./pages/TuInformacion.jsx";
+import PaginaTuInformacion from "./pages/PaginaTuInfo.jsx";
 
 function Page({ title, description }) {
   return (
@@ -40,6 +45,7 @@ function App() {
                   <Route path="/" element={<PaginaInicio />} />
                   <Route path="/login" element={<PaginaLogin />} />
                   <Route path="/registro" element={<CrearCuenta />} />
+                  <Route path="/buscar-pedidos" element={<BuscarPedidos />} />
                   <Route
                     path="/dashboard"
                     element={
@@ -105,6 +111,46 @@ function App() {
                     }
                   />
                   <Route
+                    path="/dashboard/alimentos"
+                    element={
+                      <Protedrouter roles={["admin", "tendero"]}>
+                        <PaginaAlimentos />
+                      </Protedrouter>
+                    }
+                  />
+                  <Route
+                    path="/dashboard/informacion"
+                    element={
+                      <Protedrouter roles={["admin", "tendero"]}>
+                        <PaginaTuInformacion />
+                      </Protedrouter>
+                    }
+                  />
+                  <Route
+                    path="/dashboard/colecciones-alimentos"
+                    element={
+                      <Protedrouter roles={["admin", "tendero"]}>
+                        <PaginaColeccionAlimentos />
+                      </Protedrouter>
+                    }
+                  />
+                  <Route
+                    path="/dashboard/pedidos-alimentos"
+                    element={
+                      <Protedrouter roles={["admin", "tendero"]}>
+                        <PaginaPedidosAlimentos />
+                      </Protedrouter>
+                    }
+                  />
+                  <Route
+                    path="/dashboard/combos"
+                    element={
+                      <Protedrouter roles={["admin", "tendero"]}>
+                        <PaginaCombos />
+                      </Protedrouter>
+                    }
+                  />
+                  <Route
                     path="*"
                     element={
                       <Page
@@ -120,9 +166,8 @@ function App() {
           }
         />
         {/* La tienda pública tiene su propio navbar y footer — sin layout de NWBIQShop */}
-        <Route path="/tienda/:busqueda" element={<Tienda />} />
-        <Route path="/tienda2/:tienda" element={<Catalogosplantillas />} />
-        <Route path="/plantilla" element={<Plantilla2 />} />
+        <Route path="/tienda/:tienda" element={<Catalogosplantillas />} />
+        <Route path="/informacion/:dominio" element={<TuInformacion />} />
       </Routes>
     </>
   );

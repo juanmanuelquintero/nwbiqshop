@@ -29,9 +29,7 @@ def Crear_Cuenta(datos: UseryshopCreate, db: Session = Depends(get_db)):
         "nombre": datos.nombre,
         "dominio": datos.dominio,
         "descripcion": datos.descripcion,
-        "sueldo_mensual": datos.sueldo_mensual,
         "actividad": datos.actividad,
-        "pasarela_pagos": datos.pasarela_pagos,
         "direccion": datos.direccion,
         "telefono": datos.telefono
     }

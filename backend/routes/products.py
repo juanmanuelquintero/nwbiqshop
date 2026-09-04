@@ -25,6 +25,7 @@ from services.products import (
     mirarvariantesproducto,
     eliminarVariante,
     eliminarColor,
+    cantidadproductos
 )
 import shutil
 import uuid
@@ -32,7 +33,7 @@ import os
 
 router = APIRouter()
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "https://nwbiqshop.nwbiq.com/api"
 IMG_DIR  = "img"
 
 
@@ -68,14 +69,15 @@ def Crear_Producto(
     color:       str | None     = Form(None),
     marca:       str | None     = Form(None),
     referencia:  str | None     = Form(None),
-    imagen:      UploadFile | None = File(None),
+    imagen:   UploadFile | None = File(None),
+    precio_alpormayor: int | None   = Form(None),
     db: Session = Depends(get_db),
 ):
     url_imagen = _guardar_imagen(imagen) if imagen else None
 
     class Datos: pass
     d = Datos()
-    d.id_usuario = id_usuario; d.nombre = nombre; d.precio = precio
+    d.id_usuario = id_usuario; d.nombre = nombre; d.precio = precio; d.precio_alpormayor = precio_alpormayor
     d.tipo = tipo; d.cantidad = cantidad; d.descripcion = descripcion
     d.talla = talla; d.color = color; d.marca = marca
     d.referencia = referencia; d.imagen = url_imagen
@@ -234,3 +236,7 @@ def Eliminar_Color(id_color: int, id_usuario: int, db: Session = Depends(get_db)
     resultado = eliminarColor(db, id_color, id_usuario)
     _borrar_imagen(resultado.get("imagen_url"))
     return {"mensaje": resultado["mensaje"]}
+
+@router.get("/cantidad-productos/{id_usuario}")
+def CantidadProductos(id_usuario: int, db: Session = Depends(get_db)):
+    return cantidadproductos(db, id_usuario)

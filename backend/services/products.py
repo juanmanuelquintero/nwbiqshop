@@ -2,6 +2,7 @@ from models.products import Producto, ProductoSimple, ProductoColores, ProductoV
 from models.shop import Shop
 from fastapi import HTTPException
 from sqlalchemy import func
+from services.notificaciones import Crearnotificaion
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -66,6 +67,7 @@ def crearproducto(db, datos):
         nombre=datos.nombre,
         descripcion=datos.descripcion,
         precio=datos.precio,
+        precio_alpormayor = datos.precio_alpormayor,
         tipo=datos.tipo,
     )
     db.add(nuevo)
@@ -104,6 +106,7 @@ def crearproducto(db, datos):
         db.add(ps)
         db.commit()
 
+    Crearnotificaion(db, tienda.id, "Se creo un producto", "productos")
     return {"id": nuevo.id, "mensaje": "Producto creado correctamente"}
 
 
@@ -129,6 +132,7 @@ def traerproducto(db, id_usuario: int):
             "nombre": p.nombre,
             "descripcion": p.descripcion,
             "precio": p.precio,
+            "precio_alpormayor": p.precio_alpormayor,
             "tipo": p.tipo,
             "estado": p.estado,
             "stock": stock,
@@ -164,6 +168,8 @@ def agregarcolorexistente(db, datos):
     db.commit()
     db.refresh(nuevo_color)
 
+    Crearnotificaion(db, producto.id_tienda, "Se agrego un color", "productos")
+
     return {
         "id": nuevo_color.id,
         "color": nuevo_color.color,
@@ -194,6 +200,9 @@ def agregarvarianteacolor(db, datos):
     db.commit()
     db.refresh(nueva)
 
+    producto = db.query(Producto).filter(Producto.id == color.producto_id).first()
+    Crearnotificaion(db, producto.id_tienda, "Se agrego una talla", "productos")
+
     return {
         "id": nueva.id,
         "id_color": color.id,
@@ -211,10 +220,12 @@ def actualizarproducto(db, producto_id: int, datos):
     if datos.nombre       is not None: producto.nombre       = datos.nombre
     if datos.descripcion  is not None: producto.descripcion  = datos.descripcion
     if datos.precio       is not None: producto.precio       = datos.precio
+    if datos.precio_alpormayor is not None: producto.precio_alpormayor = datos.precio_alpormayor
     if datos.estado       is not None: producto.estado       = datos.estado
 
     db.commit()
     db.refresh(producto)
+    Crearnotificaion(db, producto.id_tienda, "Se actualizo un producto", "productos")
     return {"id": producto.id, "nombre": producto.nombre, "descripcion": producto.descripcion,
             "precio": producto.precio, "estado": producto.estado}
 
@@ -227,6 +238,7 @@ def cambiarestadoproducto(db, producto_id: int, datos):
     db.commit()
     db.refresh(producto)
     texto = "activado" if producto.estado else "desactivado"
+    Crearnotificaion(db, producto.id_tienda, f"Producto {texto}", "productos")
     return {"id": producto.id, "nombre": producto.nombre, "estado": producto.estado,
             "mensaje": f"Producto {texto} correctamente."}
 
@@ -274,6 +286,8 @@ def modificarcolor(db, datos):
 
     db.commit()
     db.refresh(color)
+    producto = db.query(Producto).filter(Producto.id == color.producto_id).first()
+    Crearnotificaion(db, producto.id_tienda, "Se actualizo un color", "inventario")
     return {"id": color.id, "color": color.color, "marca": color.marca,
             "referencia": color.referencia, "imagen": color.imagen}
 
@@ -293,6 +307,11 @@ def modificarvariante(db, datos):
 
     db.commit()
     db.refresh(variante)
+    producto_color = db.query(ProductoColores).filter(
+        ProductoColores.id == color.producto_idcolor
+    ).first()
+    producto = db.query(Producto).filter(Producto.id == producto_color.producto_id).first()
+    Crearnotificaion(db, producto.id_tienda, "Se actualizo una variante", "inventario")
     return {"id": variante.id, "talla": variante.talla, "cantidad": variante.cantidad}
 
 
@@ -313,6 +332,8 @@ def modificarsimple(db, datos):
 
     db.commit()
     db.refresh(simple)
+    producto = db.query(Producto).filter(Producto.id == simple.producto_id).first()
+    Crearnotificaion(db, producto.id_tienda, "Se actualizo el stock", "inventario")
     return "Stock del producto simple modificado correctamente."
 
 
@@ -365,6 +386,11 @@ def eliminarVariante(db, variante_id: int, id_usuario: int):
 
     db.delete(variante)
     db.commit()
+    producto_color = db.query(ProductoColores).filter(
+        ProductoColores.id == color.producto_idcolor
+    ).first()
+    producto = db.query(Producto).filter(Producto.id == producto_color.producto_id).first()
+    Crearnotificaion(db, producto.id_tienda, "Se elimino una talla", "inventario")
     return {"mensaje": "Talla eliminada correctamente."}
 
 
@@ -385,4 +411,21 @@ def eliminarColor(db, id_color: int, id_usuario: int):
     db.query(ProductoVariante).filter(ProductoVariante.producto_idcolor == id_color).delete()
     db.delete(color)
     db.commit()
+    producto = db.query(Producto).filter(Producto.id == color.producto_id).first()
+    Crearnotificaion(db, producto.id_tienda, "Se elimino un color", "inventario")
     return {"imagen_url": imagen_url, "mensaje": "Color eliminado correctamente."}
+
+
+def cantidadproductos(db, id_usuario):
+    buscartienda = db.query(Shop).filter(
+        Shop.usuario_id == id_usuario
+    ).first()
+
+    if not buscartienda:
+        raise HTTPException(status_code=400, detail="error no se encontro ninguna tienda asociada")
+
+    cantidadproducto = db.query(Producto).filter(
+        Producto.id_tienda == buscartienda.id
+    ).all()
+
+    return len(cantidadproducto)

@@ -565,3 +565,33 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+.informacion-sobre-los-datos {
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-left: 0.45rem;
+  border: 1px solid rgb(34 89 215 / 20%);
+  border-radius: 50%;
+  color: var(--color-primary);
+  background: #eef6ff;
+  box-shadow: 0 2px 5px rgb(34 89 215 / 12%);
+  vertical-align: middle;
+  line-height: 1;
+  font-size: 0.76rem;
+  font-weight: 850;
+  cursor: help;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.informacion-sobre-los-datos:hover {
+  color: #fff;
+  background: var(--color-primary);
+  box-shadow: 0 5px 12px rgb(34 89 215 / 25%);
+  transform: translateY(-1px) scale(1.08);
+}

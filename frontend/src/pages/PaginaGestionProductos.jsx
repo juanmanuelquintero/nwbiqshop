@@ -10,28 +10,85 @@ import {
   CrearProducto,
   AgregarVariante,
   AgregarTalla,
+  TraerAlPorMayor,
 } from "../api/axios";
+import ModalInformacionInputs from "../components/InformacionInputs";
 import "../styles/gestion-productos.css";
 
-const TALLAS  = ["XS","S","M","L","XL","XXL","28","30","32","34","Única"];
-const COLORES = ["Negro","Blanco","Gris","Azul marino","Verde oliva","Beige","Rojo","Natural"];
+const TALLAS = [
+  "XS",
+  "S",
+  "M",
+  "L",
+  "XL",
+  "XXL",
+  "28",
+  "30",
+  "32",
+  "34",
+  "Única",
+];
+const COLORES = [
+  "Negro",
+  "Blanco",
+  "Gris",
+  "Azul marino",
+  "Verde oliva",
+  "Beige",
+  "Rojo",
+  "Natural",
+];
 
-function formatPrice(n) { return `$ ${Number(n).toLocaleString("es-CO")}`; }
+function formatPrice(n) {
+  return `$ ${Number(n).toLocaleString("es-CO")}`;
+}
 
 function StockBadge({ stock }) {
-  if (stock === 0) return <span className="gp-badge gp-badge--danger">Sin stock</span>;
-  if (stock <= 5)  return <span className="gp-badge gp-badge--warning">Bajo: {stock}</span>;
+  if (stock === 0)
+    return <span className="gp-badge gp-badge--danger">Sin stock</span>;
+  if (stock <= 5)
+    return <span className="gp-badge gp-badge--warning">Bajo: {stock}</span>;
   return <span className="gp-badge gp-badge--success">{stock} uds.</span>;
 }
 function EstadoBadge({ estado }) {
-  return <span className={`gp-badge ${estado ? "gp-badge--active" : "gp-badge--inactive"}`}>{estado ? "Activo" : "Inactivo"}</span>;
+  return (
+    <span
+      className={`gp-badge ${estado ? "gp-badge--active" : "gp-badge--inactive"}`}
+    >
+      {estado ? "Activo" : "Inactivo"}
+    </span>
+  );
 }
 function TipoBadge({ tipo }) {
-  return <span className={`gp-badge ${tipo === "variantes" ? "gp-badge--variant" : "gp-badge--simple"}`}>{tipo === "variantes" ? "🎨 Variantes" : "📦 Simple"}</span>;
+  return (
+    <span
+      className={`gp-badge ${tipo === "variantes" ? "gp-badge--variant" : "gp-badge--simple"}`}
+    >
+      {tipo === "variantes" ? "🎨 Variantes" : "📦 Simple"}
+    </span>
+  );
 }
+
+function InfoTrigger({ onClick }) {
+  return (
+    <button
+      type="button"
+      className="gp-info-trigger"
+      onClick={onClick}
+      aria-label="Ver información"
+    >
+      !
+    </button>
+  );
+}
+
 function ImagenInput({ label, value, onChange }) {
   const tieneImagen = value !== null && value !== undefined && value !== "";
-  const previewSrc  = tieneImagen ? (typeof value === "string" ? value : URL.createObjectURL(value)) : null;
+  const previewSrc = tieneImagen
+    ? typeof value === "string"
+      ? value
+      : URL.createObjectURL(value)
+    : null;
   return (
     <div className="gp-field">
       <label>{label}</label>
@@ -39,12 +96,30 @@ function ImagenInput({ label, value, onChange }) {
         {tieneImagen ? (
           <div className="gp-img-preview">
             <img src={previewSrc} alt="preview" />
-            <button type="button" className="gp-img-preview__remove" onClick={() => onChange(null)}>✕</button>
+            <button
+              type="button"
+              className="gp-img-preview__remove"
+              onClick={() => onChange(null)}
+            >
+              ✕
+            </button>
           </div>
         ) : (
           <label className="gp-img-upload">
-            <div className="gp-img-placeholder"><span>🖼️</span><small>Seleccionar imagen</small></div>
-            <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files[0]; if (f) onChange(f); e.target.value = ""; }} />
+            <div className="gp-img-placeholder">
+              <span>🖼️</span>
+              <small>Seleccionar imagen</small>
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files[0];
+                if (f) onChange(f);
+                e.target.value = "";
+              }}
+            />
           </label>
         )}
       </div>
@@ -57,21 +132,23 @@ function ImagenInput({ label, value, onChange }) {
    Nueva estructura: Producto → ProductoColores → ProductoVariante
    Un color tiene: color, marca, referencia, imagen + N tallas
 ══════════════════════════════════════════ */
-function ModalCrear({ idUsuario, onClose, onCreado }) {
-  const [paso,    setPaso]    = useState(1);
-  const [tipo,    setTipo]    = useState(null);
+function ModalCrear({ idUsuario, alpormayor, onClose, onCreado }) {
+  const [paso, setPaso] = useState(1);
+  const [tipo, setTipo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [info, setInfo] = useState(null);
 
   // Campos comunes
-  const [nombre,      setNombre]      = useState("");
-  const [descripcion, setDesc]        = useState("");
-  const [precio,      setPrecio]      = useState("");
+  const [nombre, setNombre] = useState("");
+  const [descripcion, setDesc] = useState("");
+  const [precio, setPrecio] = useState("");
+  const [precioAlporMayor, setPrecioAlporMayor] = useState("");
 
   // Simple
-  const [cantSimple,  setCantSimple]  = useState("");
+  const [cantSimple, setCantSimple] = useState("");
   const [marcaSimple, setMarcaSimple] = useState("");
-  const [refSimple,   setRefSimple]   = useState("");
-  const [imgSimple,   setImgSimple]   = useState(null);
+  const [refSimple, setRefSimple] = useState("");
+  const [imgSimple, setImgSimple] = useState(null);
 
   // Colores (cada uno tiene tallas)
   // colores: [{ color, marca, referencia, imagen: File|null, tallas: [{talla, cantidad}] }]
@@ -80,36 +157,63 @@ function ModalCrear({ idUsuario, onClose, onCreado }) {
   // Builder para color en curso
   const [bColor, setBColor] = useState(COLORES[0]);
   const [bMarca, setBMarca] = useState("");
-  const [bRef,   setBRef]   = useState("");
-  const [bImg,   setBImg]   = useState(null);
+  const [bRef, setBRef] = useState("");
+  const [bImg, setBImg] = useState(null);
   // Builder para talla en curso
   const [bTalla, setBTalla] = useState(TALLAS[0]);
-  const [bCant,  setBCant]  = useState("");
+  const [bCant, setBCant] = useState("");
   // tallas pendientes antes de confirmar el color
   const [tallasTemp, setTallasTemp] = useState([]);
 
   const agregarTallaTemp = () => {
     if (!bCant || Number(bCant) < 0) return;
-    if (tallasTemp.find(t => t.talla === bTalla)) {
-      mostrarAlerta("error", `Ya agregaste la talla ${bTalla} para este color`); return;
+    if (tallasTemp.find((t) => t.talla === bTalla)) {
+      mostrarAlerta("error", `Ya agregaste la talla ${bTalla} para este color`);
+      return;
     }
-    setTallasTemp(prev => [...prev, { talla: bTalla, cantidad: Number(bCant) }]);
+    setTallasTemp((prev) => [
+      ...prev,
+      { talla: bTalla, cantidad: Number(bCant) },
+    ]);
     setBCant("");
   };
 
   const confirmarColor = () => {
-    if (tallasTemp.length === 0) { mostrarAlerta("error", "Agrega al menos una talla para este color"); return; }
-    if (colores.find(c => c.color === bColor)) { mostrarAlerta("error", `Ya existe el color ${bColor}`); return; }
-    setColores(prev => [...prev, { color: bColor, marca: bMarca, referencia: bRef, imagen: bImg, tallas: tallasTemp }]);
-    setBMarca(""); setBRef(""); setBImg(null); setTallasTemp([]);
+    if (tallasTemp.length === 0) {
+      mostrarAlerta("error", "Agrega al menos una talla para este color");
+      return;
+    }
+    if (colores.find((c) => c.color === bColor)) {
+      mostrarAlerta("error", `Ya existe el color ${bColor}`);
+      return;
+    }
+    setColores((prev) => [
+      ...prev,
+      {
+        color: bColor,
+        marca: bMarca,
+        referencia: bRef,
+        imagen: bImg,
+        tallas: tallasTemp,
+      },
+    ]);
+    setBMarca("");
+    setBRef("");
+    setBImg(null);
+    setTallasTemp([]);
   };
 
-  const quitarColor = (i) => setColores(prev => prev.filter((_, idx) => idx !== i));
+  const quitarColor = (i) =>
+    setColores((prev) => prev.filter((_, idx) => idx !== i));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (tipo === "variantes" && colores.length === 0) {
-      mostrarAlerta("error", "Agrega al menos un color antes de crear el producto."); return;
+      mostrarAlerta(
+        "error",
+        "Agrega al menos un color antes de crear el producto.",
+      );
+      return;
     }
     setLoading(true);
     try {
@@ -122,25 +226,30 @@ function ModalCrear({ idUsuario, onClose, onCreado }) {
         form.append("tipo", "simple");
         form.append("cantidad", Number(cantSimple));
         if (marcaSimple) form.append("marca", marcaSimple);
-        if (refSimple)   form.append("referencia", refSimple);
-        if (imgSimple)   form.append("imagen", imgSimple);
+        if (refSimple) form.append("referencia", refSimple);
+        if (imgSimple) form.append("imagen", imgSimple);
+        if (alpormayor?.estado && precioAlporMayor)
+          form.append("precio_alpormayor", Number(precioAlporMayor));
         await CrearProducto(form);
       } else {
         // Crear producto con el primer color + primera talla
         const primerColor = colores[0];
         const primeraTalla = primerColor.tallas[0];
         const form = new FormData();
-        form.append("id_usuario",  idUsuario);
-        form.append("nombre",      nombre);
+        form.append("id_usuario", idUsuario);
+        form.append("nombre", nombre);
         form.append("descripcion", descripcion);
-        form.append("precio",      Number(precio));
-        form.append("tipo",        "variantes");
-        form.append("cantidad",    primeraTalla.cantidad);
-        if (primeraTalla.talla)      form.append("talla",     primeraTalla.talla);
-        if (primerColor.color)       form.append("color",     primerColor.color);
-        if (primerColor.marca)       form.append("marca",     primerColor.marca);
-        if (primerColor.referencia)  form.append("referencia",primerColor.referencia);
-        if (primerColor.imagen)      form.append("imagen",    primerColor.imagen);
+        form.append("precio", Number(precio));
+        form.append("tipo", "variantes");
+        form.append("cantidad", primeraTalla.cantidad);
+        if (primeraTalla.talla) form.append("talla", primeraTalla.talla);
+        if (primerColor.color) form.append("color", primerColor.color);
+        if (primerColor.marca) form.append("marca", primerColor.marca);
+        if (primerColor.referencia)
+          form.append("referencia", primerColor.referencia);
+        if (primerColor.imagen) form.append("imagen", primerColor.imagen);
+        if (alpormayor?.estado && precioAlporMayor)
+          form.append("precio_alpormayor", Number(precioAlporMayor));
         const resCrear = await CrearProducto(form);
         const productoId = resCrear.data?.id;
 
@@ -148,7 +257,7 @@ function ModalCrear({ idUsuario, onClose, onCreado }) {
         // Primero obtenemos el id_color del producto recién creado
         const resProductos = await TraerProductos(idUsuario);
         const productoCreado = resProductos.data
-          .filter(p => p.nombre === nombre)
+          .filter((p) => p.nombre === nombre)
           .sort((a, b) => b.id - a.id)[0];
 
         // Importar TraerVariantes para obtener el id_color del primer color creado
@@ -159,7 +268,12 @@ function ModalCrear({ idUsuario, onClose, onCreado }) {
         // Tallas adicionales del primer color
         for (let k = 1; k < primerColor.tallas.length; k++) {
           const t = primerColor.tallas[k];
-          await AgregarTalla({ id_usuario: idUsuario, id_color: primerColorObj.id_color, talla: t.talla, cantidad: t.cantidad });
+          await AgregarTalla({
+            id_usuario: idUsuario,
+            id_color: primerColorObj.id_color,
+            talla: t.talla,
+            cantidad: t.cantidad,
+          });
         }
 
         // Colores adicionales
@@ -167,22 +281,28 @@ function ModalCrear({ idUsuario, onClose, onCreado }) {
           const c = colores[ci];
           const colorForm = new FormData();
           colorForm.append("id_usuario", idUsuario);
-          if (c.color)      colorForm.append("color",     c.color);
-          if (c.marca)      colorForm.append("marca",     c.marca);
-          if (c.referencia) colorForm.append("referencia",c.referencia);
-          if (c.imagen)     colorForm.append("imagen",    c.imagen);
+          if (c.color) colorForm.append("color", c.color);
+          if (c.marca) colorForm.append("marca", c.marca);
+          if (c.referencia) colorForm.append("referencia", c.referencia);
+          if (c.imagen) colorForm.append("imagen", c.imagen);
           const resColor = await AgregarVariante(productoCreado.id, colorForm);
           const nuevoColorId = resColor.data?.id;
           // Tallas del color adicional
           for (const t of c.tallas) {
-            await AgregarTalla({ id_usuario: idUsuario, id_color: nuevoColorId, talla: t.talla, cantidad: t.cantidad });
+            await AgregarTalla({
+              id_usuario: idUsuario,
+              id_color: nuevoColorId,
+              talla: t.talla,
+              cantidad: t.cantidad,
+            });
           }
         }
       }
       mostrarAlerta("success", "Producto creado correctamente");
-      onCreado(); onClose();
+      onCreado();
+      onClose();
     } catch (err) {
-      mostrarAlerta("error", err?.response?.data?.detail ?? "Error al crear el producto");
+      mostrarAlerta("error", "Error al crear el producto");
     } finally {
       setLoading(false);
     }
@@ -190,36 +310,74 @@ function ModalCrear({ idUsuario, onClose, onCreado }) {
 
   return (
     <div className="gp-overlay" onClick={onClose}>
-      <div className="gp-modal gp-modal--lg" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="gp-modal gp-modal--lg"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="gp-modal__header">
           <div className="gp-modal__header-left">
             <div className="gp-modal__icon">📦</div>
             <div>
               <p className="gp-modal__eyebrow">Nuevo producto</p>
               <h2 className="gp-modal__title">
-                {paso === 1 ? "¿Qué tipo de producto es?" : `Crear producto ${tipo === "simple" ? "simple" : "con colores y tallas"}`}
+                {paso === 1
+                  ? "¿Qué tipo de producto es?"
+                  : `Crear producto ${tipo === "simple" ? "simple" : "con colores y tallas"}`}
               </h2>
             </div>
           </div>
-          <button className="gp-modal__close" onClick={onClose} aria-label="Cerrar">✕</button>
+          <button
+            className="gp-modal__close"
+            onClick={onClose}
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
         </div>
 
         {/* PASO 1 — tipo */}
         {paso === 1 && (
           <div className="gp-tipo-selector">
-            <button type="button" className={`gp-tipo-card ${tipo === "simple" ? "gp-tipo-card--on" : ""}`} onClick={() => setTipo("simple")}>
+            <button
+              type="button"
+              className={`gp-tipo-card ${tipo === "simple" ? "gp-tipo-card--on" : ""}`}
+              onClick={() => setTipo("simple")}
+            >
               <span className="gp-tipo-card__icon">📦</span>
               <strong>Producto simple</strong>
-              <small>Un solo producto con una cantidad de stock. Sin tallas ni colores.</small>
+              <small>
+                Un solo producto con una cantidad de stock. Sin tallas ni
+                colores.
+              </small>
             </button>
-            <button type="button" className={`gp-tipo-card ${tipo === "variantes" ? "gp-tipo-card--on" : ""}`} onClick={() => setTipo("variantes")}>
+            <button
+              type="button"
+              className={`gp-tipo-card ${tipo === "variantes" ? "gp-tipo-card--on" : ""}`}
+              onClick={() => setTipo("variantes")}
+            >
               <span className="gp-tipo-card__icon">🎨</span>
               <strong>Con colores y tallas</strong>
-              <small>El producto tiene colores, cada color puede tener varias tallas con su propio stock.</small>
+              <small>
+                El producto tiene colores, cada color puede tener varias tallas
+                con su propio stock.
+              </small>
             </button>
             <div className="gp-modal__actions">
-              <button type="button" className="gp-btn gp-btn--ghost" onClick={onClose}>Cancelar</button>
-              <button type="button" className="gp-btn gp-btn--primary" disabled={!tipo} onClick={() => setPaso(2)}>Continuar →</button>
+              <button
+                type="button"
+                className="gp-btn gp-btn--ghost"
+                onClick={onClose}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="gp-btn gp-btn--primary"
+                disabled={!tipo}
+                onClick={() => setPaso(2)}
+              >
+                Continuar →
+              </button>
             </div>
           </div>
         )}
@@ -230,78 +388,299 @@ function ModalCrear({ idUsuario, onClose, onCreado }) {
             {/* Nombre + precio */}
             <div className="gp-modal__row gp-modal__row--2">
               <div className="gp-field gp-field--full">
-                <label>Nombre del producto <span className="gp-req">*</span></label>
-                <input required placeholder="Ej: Camiseta Oversize Negra" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+                <label>
+                  Nombre del producto <span className="gp-req">*</span>
+                  <InfoTrigger
+                    onClick={() =>
+                      setInfo(
+                        "Usa un nombre claro y fácil de identificar para tus clientes. Incluye el tipo de producto, modelo o característica principal.",
+                      )
+                    }
+                  />
+                </label>
+                <input
+                  required
+                  placeholder="Ej: Camiseta Oversize Negra"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                />
               </div>
               <div className="gp-field">
-                <label>Precio <span className="gp-req">*</span></label>
-                <div className="gp-input-prefix"><span>$</span><input required type="number" min="0" placeholder="89900" value={precio} onChange={(e) => setPrecio(e.target.value)} /></div>
+                <label>
+                  Precio unitario <span className="gp-req">*</span>
+                  <InfoTrigger
+                    onClick={() =>
+                      setInfo(
+                        "Es el precio de venta de una unidad del producto. Escríbelo en pesos colombianos, sin puntos ni símbolos.",
+                      )
+                    }
+                  />
+                </label>
+                <div className="gp-input-prefix">
+                  <span>$</span>
+                  <input
+                    required
+                    type="number"
+                    min="0"
+                    placeholder="89900"
+                    value={precio}
+                    onChange={(e) => setPrecio(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="gp-field">
+                <label>
+                  Precio al por mayor
+                  {!alpormayor?.estado && (
+                    <span
+                      className="gp-req"
+                      style={{
+                        color: "#8898b0",
+                        fontWeight: 600,
+                        marginLeft: 6,
+                      }}
+                    >
+                      deshabilitado
+                    </span>
+                  )}
+                </label>
+                <div
+                  className={`gp-input-prefix ${!alpormayor?.estado ? "gp-input-prefix--disabled" : ""}`}
+                >
+                  <span>$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Ej: 69900"
+                    value={precioAlporMayor}
+                    disabled={!alpormayor?.estado}
+                    onChange={(e) => setPrecioAlporMayor(e.target.value)}
+                  />
+                </div>
               </div>
               {tipo === "simple" && (
                 <div className="gp-field">
-                  <label>Cantidad en stock <span className="gp-req">*</span></label>
-                  <input required type="number" min="0" placeholder="0" value={cantSimple} onChange={(e) => setCantSimple(e.target.value)} />
+                  <label>
+                    Cantidad en stock <span className="gp-req">*</span>
+                    <InfoTrigger
+                      onClick={() =>
+                        setInfo(
+                          "Indica cuántas unidades tienes disponibles actualmente. Este número se mostrará como stock y disminuirá con los pedidos.",
+                        )
+                      }
+                    />
+                  </label>
+                  <input
+                    required
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={cantSimple}
+                    onChange={(e) => setCantSimple(e.target.value)}
+                  />
                 </div>
               )}
             </div>
 
             <div className="gp-field gp-field--full">
               <label>Descripción</label>
-              <textarea rows={2} placeholder="Describe el producto brevemente..." value={descripcion} onChange={(e) => setDesc(e.target.value)} />
+              <textarea
+                rows={2}
+                placeholder="Describe el producto brevemente..."
+                value={descripcion}
+                onChange={(e) => setDesc(e.target.value)}
+              />
+            </div>
+
+            {/* Info al por mayor */}
+            <div className="gp-alpormayor-info">
+              <span className="gp-alpormayor-info__icon">🏷️</span>
+              <div>
+                <p className="gp-alpormayor-info__text">
+                  Venta al por mayor:{" "}
+                  <strong
+                    className={
+                      alpormayor?.estado
+                        ? "gp-alpormayor-info__on"
+                        : "gp-alpormayor-info__off"
+                    }
+                  >
+                    {alpormayor?.estado ? "Habilitada ✓" : "Deshabilitada"}
+                  </strong>
+                  {alpormayor?.cantidad_minima && (
+                    <>
+                      {" "}
+                      · Cantidad mínima:{" "}
+                      <strong>{alpormayor.cantidad_minima} uds.</strong>
+                    </>
+                  )}
+                </p>
+                <p className="gp-alpormayor-info__hint">
+                  {alpormayor?.estado
+                    ? "Puedes establecer el precio al por mayor para este producto."
+                    : "La venta al por mayor está deshabilitada. El precio al por mayor no se aplicará. Puedes cambiar esto desde Opciones."}
+                </p>
+              </div>
             </div>
 
             {/* Simple: marca, ref, imagen */}
             {tipo === "simple" && (
               <div className="gp-modal__row">
-                <div className="gp-field"><label>Marca</label><input placeholder="Nike, Adidas…" value={marcaSimple} onChange={(e) => setMarcaSimple(e.target.value)} /></div>
-                <div className="gp-field"><label>Referencia</label><input placeholder="REF-001" value={refSimple} onChange={(e) => setRefSimple(e.target.value)} /></div>
-                <ImagenInput label="Imagen del producto" value={imgSimple} onChange={setImgSimple} />
+                <div className="gp-field">
+                  <label>Marca</label>
+                  <input
+                    placeholder="Nike, Adidas…"
+                    value={marcaSimple}
+                    onChange={(e) => setMarcaSimple(e.target.value)}
+                  />
+                </div>
+                <div className="gp-field">
+                  <label>Referencia</label>
+                  <input
+                    placeholder="REF-001"
+                    value={refSimple}
+                    onChange={(e) => setRefSimple(e.target.value)}
+                  />
+                </div>
+                <ImagenInput
+                  label="Imagen del producto"
+                  value={imgSimple}
+                  onChange={setImgSimple}
+                />
               </div>
             )}
 
             {/* Variantes: colores + tallas */}
             {tipo === "variantes" && (
               <div className="gp-variantes-section">
-                <p className="gp-variantes-section__title">Agregar colores y tallas <span className="gp-req">*</span></p>
-                <p className="gp-variantes-section__hint">Define cada color con su imagen, marca y referencia. Luego agrega las tallas disponibles para ese color.</p>
+                <p className="gp-variantes-section__title">
+                  Agregar colores y tallas <span className="gp-req">*</span>
+                  <InfoTrigger
+                    onClick={() =>
+                      setInfo(
+                        "Usa variantes cuando un mismo producto tenga diferentes colores o tallas. Cada talla puede tener su propia cantidad disponible.",
+                      )
+                    }
+                  />
+                </p>
+                <p className="gp-variantes-section__hint">
+                  Define cada color con su imagen, marca y referencia. Luego
+                  agrega las tallas disponibles para ese color.
+                </p>
 
                 {/* Builder de color actual */}
                 <div className="gp-color-builder">
                   <p className="gp-color-builder__label">🎨 Configurar color</p>
                   <div className="gp-variante-builder gp-variante-builder--lg">
-                    <div className="gp-field"><label>Color</label>
-                      <select value={bColor} onChange={(e) => setBColor(e.target.value)}>{COLORES.map(c => <option key={c}>{c}</option>)}</select>
+                    <div className="gp-field">
+                      <label>Color</label>
+                      <select
+                        value={bColor}
+                        onChange={(e) => setBColor(e.target.value)}
+                      >
+                        {COLORES.map((c) => (
+                          <option key={c}>{c}</option>
+                        ))}
+                      </select>
                     </div>
-                    <div className="gp-field"><label>Marca</label><input placeholder="Opcional" value={bMarca} onChange={(e) => setBMarca(e.target.value)} /></div>
-                    <div className="gp-field"><label>Referencia</label><input placeholder="Opcional" value={bRef} onChange={(e) => setBRef(e.target.value)} /></div>
-                    <ImagenInput label="Imagen del color" value={bImg} onChange={setBImg} />
+                    <div className="gp-field">
+                      <label>Marca</label>
+                      <input
+                        placeholder="Opcional"
+                        value={bMarca}
+                        onChange={(e) => setBMarca(e.target.value)}
+                      />
+                    </div>
+                    <div className="gp-field">
+                      <label>Referencia</label>
+                      <input
+                        placeholder="Opcional"
+                        value={bRef}
+                        onChange={(e) => setBRef(e.target.value)}
+                      />
+                    </div>
+                    <ImagenInput
+                      label="Imagen del color"
+                      value={bImg}
+                      onChange={setBImg}
+                    />
                   </div>
 
                   {/* Tallas para este color */}
-                  <p className="gp-color-builder__label">📐 Tallas para este color</p>
+                  <p className="gp-color-builder__label">
+                    📐 Tallas para este color
+                    <InfoTrigger
+                      onClick={() =>
+                        setInfo(
+                          "Selecciona una talla y registra cuántas unidades tienes de ella para el color elegido. Agrega cada talla por separado.",
+                        )
+                      }
+                    />
+                  </p>
                   <div className="gp-variante-builder">
-                    <div className="gp-field"><label>Talla</label>
-                      <select value={bTalla} onChange={(e) => setBTalla(e.target.value)}>{TALLAS.map(t => <option key={t}>{t}</option>)}</select>
+                    <div className="gp-field">
+                      <label>Talla</label>
+                      <select
+                        value={bTalla}
+                        onChange={(e) => setBTalla(e.target.value)}
+                      >
+                        {TALLAS.map((t) => (
+                          <option key={t}>{t}</option>
+                        ))}
+                      </select>
                     </div>
-                    <div className="gp-field"><label>Cantidad</label>
-                      <input type="number" min="0" placeholder="0" value={bCant} onChange={(e) => setBCant(e.target.value)} />
+                    <div className="gp-field">
+                      <label>Cantidad</label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={bCant}
+                        onChange={(e) => setBCant(e.target.value)}
+                      />
                     </div>
-                    <button type="button" className="gp-btn gp-btn--add-variant" onClick={agregarTallaTemp} disabled={!bCant}>+ Agregar talla</button>
+                    <button
+                      type="button"
+                      className="gp-btn gp-btn--add-variant"
+                      onClick={agregarTallaTemp}
+                      disabled={!bCant}
+                    >
+                      + Agregar talla
+                    </button>
                   </div>
 
                   {tallasTemp.length > 0 && (
                     <div className="gp-variantes-list">
                       {tallasTemp.map((t, i) => (
                         <div key={i} className="gp-variante-tag">
-                          <span className="gp-variante-tag__talla">{t.talla}</span>
-                          <span className="gp-variante-tag__cant">{t.cantidad} uds.</span>
-                          <button type="button" className="gp-variante-tag__remove" onClick={() => setTallasTemp(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
+                          <span className="gp-variante-tag__talla">
+                            {t.talla}
+                          </span>
+                          <span className="gp-variante-tag__cant">
+                            {t.cantidad} uds.
+                          </span>
+                          <button
+                            type="button"
+                            className="gp-variante-tag__remove"
+                            onClick={() =>
+                              setTallasTemp((prev) =>
+                                prev.filter((_, idx) => idx !== i),
+                              )
+                            }
+                          >
+                            ✕
+                          </button>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  <button type="button" className="gp-btn gp-btn--primary" style={{ marginTop: "8px" }} onClick={confirmarColor}>
+                  <button
+                    type="button"
+                    className="gp-btn gp-btn--primary"
+                    style={{ marginTop: "8px" }}
+                    onClick={confirmarColor}
+                  >
                     ✓ Confirmar color "{bColor}"
                   </button>
                 </div>
@@ -309,15 +688,39 @@ function ModalCrear({ idUsuario, onClose, onCreado }) {
                 {/* Colores confirmados */}
                 {colores.length > 0 && (
                   <div className="gp-colores-confirmados">
-                    <p className="gp-variantes-section__hint">Colores agregados:</p>
+                    <p className="gp-variantes-section__hint">
+                      Colores agregados:
+                    </p>
                     {colores.map((c, i) => (
                       <div key={i} className="gp-color-tag">
-                        {c.imagen && <img src={URL.createObjectURL(c.imagen)} className="gp-variante-tag__img" alt="" />}
+                        {c.imagen && (
+                          <img
+                            src={URL.createObjectURL(c.imagen)}
+                            className="gp-variante-tag__img"
+                            alt=""
+                          />
+                        )}
                         <div>
                           <strong>{c.color}</strong>
-                          <span style={{ marginLeft: 8, fontSize: "0.8rem", opacity: 0.7 }}>{c.tallas.map(t => `${t.talla}(${t.cantidad})`).join(" · ")}</span>
+                          <span
+                            style={{
+                              marginLeft: 8,
+                              fontSize: "0.8rem",
+                              opacity: 0.7,
+                            }}
+                          >
+                            {c.tallas
+                              .map((t) => `${t.talla}(${t.cantidad})`)
+                              .join(" · ")}
+                          </span>
                         </div>
-                        <button type="button" className="gp-variante-tag__remove" onClick={() => quitarColor(i)}>✕</button>
+                        <button
+                          type="button"
+                          className="gp-variante-tag__remove"
+                          onClick={() => quitarColor(i)}
+                        >
+                          ✕
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -326,12 +729,25 @@ function ModalCrear({ idUsuario, onClose, onCreado }) {
             )}
 
             <div className="gp-modal__actions">
-              <button type="button" className="gp-btn gp-btn--ghost" onClick={() => setPaso(1)}>← Volver</button>
-              <button type="submit" className="gp-btn gp-btn--primary" disabled={loading}>{loading ? "Creando…" : "Crear producto ✦"}</button>
+              <button
+                type="button"
+                className="gp-btn gp-btn--ghost"
+                onClick={() => setPaso(1)}
+              >
+                ← Volver
+              </button>
+              <button
+                type="submit"
+                className="gp-btn gp-btn--primary"
+                disabled={loading}
+              >
+                {loading ? "Creando…" : "Crear producto ✦"}
+              </button>
             </div>
           </form>
         )}
       </div>
+      {info && <ModalInformacionInputs text={info} setmodal={setInfo} />}
     </div>
   );
 }
@@ -341,11 +757,15 @@ function ModalCrear({ idUsuario, onClose, onCreado }) {
    Solo edita nombre, descripción, precio.
    El stock se gestiona desde Inventario.
 ══════════════════════════════════════════ */
-function ModalEditar({ product, userId, onClose, onActualizado }) {
+function ModalEditar({ product, userId, alpormayor, onClose, onActualizado }) {
   const [nombre, setNombre] = useState(product.nombre);
   const [descripcion, setDesc] = useState(product.descripcion ?? "");
   const [precio, setPrecio] = useState(product.precio);
+  const [precioAlporMayor, setPrecioAlporMayor] = useState(
+    product.precio_alpormayor ?? "",
+  );
   const [loading, setLoading] = useState(false);
+  const [info, setInfo] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -356,6 +776,9 @@ function ModalEditar({ product, userId, onClose, onActualizado }) {
         nombre,
         descripcion,
         precio: Number(precio),
+        ...(alpormayor?.estado && precioAlporMayor !== ""
+          ? { precio_alpormayor: Number(precioAlporMayor) }
+          : {}),
       });
       mostrarAlerta("success", "Producto actualizado correctamente");
       onClose();
@@ -393,6 +816,13 @@ function ModalEditar({ product, userId, onClose, onActualizado }) {
           <div className="gp-field gp-field--full">
             <label>
               Nombre del producto <span className="gp-req">*</span>
+              <InfoTrigger
+                onClick={() =>
+                  setInfo(
+                    "Puedes actualizar el nombre para que describa mejor el producto y sea fácil de encontrar para tus clientes.",
+                  )
+                }
+              />
             </label>
             <input
               required
@@ -405,6 +835,13 @@ function ModalEditar({ product, userId, onClose, onActualizado }) {
             <div className="gp-field">
               <label>
                 Precio <span className="gp-req">*</span>
+                <InfoTrigger
+                  onClick={() =>
+                    setInfo(
+                      "Actualiza aquí el precio de venta de una unidad. El valor se maneja en pesos colombianos.",
+                    )
+                  }
+                />
               </label>
               <div className="gp-input-prefix">
                 <span>$</span>
@@ -418,9 +855,45 @@ function ModalEditar({ product, userId, onClose, onActualizado }) {
               </div>
             </div>
 
+            <div className="gp-field">
+              <label>
+                Precio al por mayor
+                {!alpormayor?.estado && (
+                  <span
+                    className="gp-req"
+                    style={{ color: "#8898b0", fontWeight: 600, marginLeft: 6 }}
+                  >
+                    deshabilitado
+                  </span>
+                )}
+              </label>
+              <div
+                className={`gp-input-prefix ${!alpormayor?.estado ? "gp-input-prefix--disabled" : ""}`}
+              >
+                <span>$</span>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Ej: 69900"
+                  value={precioAlporMayor}
+                  disabled={!alpormayor?.estado}
+                  onChange={(e) => setPrecioAlporMayor(e.target.value)}
+                />
+              </div>
+            </div>
+
             {/* Stock en modo sólo lectura */}
             <div className="gp-field">
-              <label>Stock total</label>
+              <label>
+                Stock total
+                <InfoTrigger
+                  onClick={() =>
+                    setInfo(
+                      "El stock se muestra solo como consulta. Para modificar cantidades, entra a Gestión de Inventario.",
+                    )
+                  }
+                />
+              </label>
               <div className="gp-stock-readonly">
                 <span className="gp-stock-readonly__val">{product.stock}</span>
                 <span className="gp-stock-readonly__hint">
@@ -470,6 +943,7 @@ function ModalEditar({ product, userId, onClose, onActualizado }) {
           </div>
         </form>
       </div>
+      {info && <ModalInformacionInputs text={info} setmodal={setInfo} />}
     </div>
   );
 }
@@ -532,6 +1006,14 @@ function PaginaGestionProductos() {
   const [filterTipo, setFilterTipo] = useState("Todos");
   const [filterEst, setFilterEst] = useState("Todos");
   const [modal, setModal] = useState(null); // null | { type, product? }
+  const [alpormayor, setalpormayor] = useState([]);
+  const Buscaralpormayor = async (id_usuario) => {
+    try {
+      const res = await TraerAlPorMayor(id_usuario);
+      setalpormayor(res.data);
+      console.log(res.data);
+    } catch {}
+  };
 
   /* ── Auth + carga inicial ── */
   useEffect(() => {
@@ -545,6 +1027,7 @@ function PaginaGestionProductos() {
     setUsername(decode.usuario?.split(" ")[0] ?? "Usuario");
     setUserId(decode.id);
     cargarProductos(decode.id);
+    Buscaralpormayor(decode.id);
   }, []);
 
   const cargarProductos = async (id) => {
@@ -812,6 +1295,7 @@ function PaginaGestionProductos() {
       {modal?.type === "crear" && (
         <ModalCrear
           idUsuario={userId}
+          alpormayor={alpormayor}
           onClose={closeModal}
           onCreado={onProductoCreado}
         />
@@ -820,6 +1304,7 @@ function PaginaGestionProductos() {
         <ModalEditar
           product={modal.product}
           userId={userId}
+          alpormayor={alpormayor}
           onClose={closeModal}
           onActualizado={() => cargarProductos(userId)}
         />

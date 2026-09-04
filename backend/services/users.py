@@ -7,6 +7,8 @@ from fastapi import HTTPException
 import jwt
 from config import settings
 from models.shop import Shop
+from models.tuinfo import TuInformacion
+from services.suscripciones import crearsuscripcion
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -54,6 +56,14 @@ def crearusuario(db, datos):
     db.commit()
     db.refresh(nuevouser)
 
+    tuinfo = TuInformacion(
+         id_usuario = nuevouser.cedula
+    )
+
+    crearsuscripcion(db, nuevouser.cedula)
+
+    db.add(tuinfo)
+    db.commit()
     return "usuario creado"
 
 def creartoken(datos):

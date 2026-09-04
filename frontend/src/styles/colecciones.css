@@ -712,6 +712,27 @@
   font-weight: 750;
   color: var(--color-text);
 }
+.col-info-trigger {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.35rem;
+  padding: 0;
+  border: 1px solid #7c3aed;
+  border-radius: 50%;
+  background: #f3eeff;
+  color: #7c3aed;
+  font-size: 0.65rem;
+  font-weight: 850;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.col-info-trigger:hover {
+  background: #7c3aed;
+  color: #fff;
+}
 .col-req {
   color: #e0405a;
   font-weight: 700;
@@ -995,4 +1016,44 @@
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ══════════════════════════════════════════
+   Extensiones para Colección de Alimentos
+══════════════════════════════════════════ */
+
+/* Meta debajo del título en la tarjeta */
+.cali-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #8898b0;
+  font-weight: 600;
+  margin-top: -0.2rem;
+}
+
+/* Imagen miniatura en la fila del modal detalle */
+.cali-row-img {
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: cover;
+  border-radius: 0.55rem;
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* Info (nombre + precio) en la fila */
+.cali-row-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.cali-row-price {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #1a7a50;
 }

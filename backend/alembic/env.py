@@ -12,7 +12,14 @@ from models.collections import Coleccion, ColeccionProducto
 from models.styles import Estilos
 from models.promociones import Promocion, PromocionProducto, PromocionUnitaria
 from models.pedidos import Pedido, PedidoProducto
-
+from models.alimentos import Alimento, AlimentoIngrediente, Ingrediente
+from models.colecciones_alimentos import ColeccionAlimentos, ColeccionAlimentoRelacion
+from models.pedidos_alimentos import PedidoAlimento, PedidoAlimentoItem
+from models.combos import Combo, ComboAlimento
+from models.alpormayor import AlPorMayor
+from models.tuinfo import TuInformacion,QueHago,MisEspecialidades,ComoFunciona,InformacionServicio,MiExperiencia,PorqueTrabajarConmigo
+from models.notificaciones import Notificaciones
+from models.suscripcion import Suscripciones
 
 target_metadata = Base.metadata
 # this is the Alembic Config object, which provides

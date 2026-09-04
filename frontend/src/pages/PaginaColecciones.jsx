@@ -14,6 +14,7 @@ import {
   TraerProductos,
   EliminarColeccion,
 } from "../api/axios";
+import ModalInformacionInputs from "../components/InformacionInputs";
 import "../styles/colecciones.css";
 
 /* ══════════════════════════════════════════
@@ -28,6 +29,19 @@ function formatDate(str) {
   });
 }
 
+function InfoTrigger({ onClick }) {
+  return (
+    <button
+      type="button"
+      className="col-info-trigger"
+      onClick={onClick}
+      aria-label="Ver información"
+    >
+      !
+    </button>
+  );
+}
+
 /* ══════════════════════════════════════════
    MODAL CREAR COLECCIÓN
 ══════════════════════════════════════════ */
@@ -36,6 +50,7 @@ function ModalCrear({ userId, productos, onClose, onCreado }) {
   const [descripcion, setDesc] = useState("");
   const [seleccionados, setSelec] = useState([]); // ids de productos
   const [loading, setLoading] = useState(false);
+  const [info, setInfo] = useState(null);
 
   const toggleProducto = (id) =>
     setSelec((prev) =>
@@ -85,6 +100,13 @@ function ModalCrear({ userId, productos, onClose, onCreado }) {
           <div className="col-field col-field--full">
             <label>
               Nombre <span className="col-req">*</span>
+              <InfoTrigger
+                onClick={() =>
+                  setInfo(
+                    "Elige un nombre claro para identificar fácilmente el grupo de productos, por ejemplo: Colección Verano 2026.",
+                  )
+                }
+              />
             </label>
             <input
               required
@@ -95,7 +117,16 @@ function ModalCrear({ userId, productos, onClose, onCreado }) {
           </div>
 
           <div className="col-field col-field--full">
-            <label>Descripción</label>
+            <label>
+              Descripción
+              <InfoTrigger
+                onClick={() =>
+                  setInfo(
+                    "Describe el tema o propósito de la colección. Esta información ayuda a organizar tu catálogo y puede mostrarse a tus clientes.",
+                  )
+                }
+              />
+            </label>
             <textarea
               rows={2}
               placeholder="Describe brevemente la colección…"
@@ -108,6 +139,13 @@ function ModalCrear({ userId, productos, onClose, onCreado }) {
           <div className="col-field col-field--full">
             <label>
               Agregar productos <span className="col-opt">(opcional)</span>
+              <InfoTrigger
+                onClick={() =>
+                  setInfo(
+                    "Selecciona los productos que quieres incluir desde el inicio. También podrás agregarlos o quitarlos después.",
+                  )
+                }
+              />
             </label>
             {productos.length === 0 ? (
               <p className="col-empty-hint">
@@ -161,6 +199,7 @@ function ModalCrear({ userId, productos, onClose, onCreado }) {
           </div>
         </form>
       </div>
+      {info && <ModalInformacionInputs text={info} setmodal={setInfo} />}
     </div>
   );
 }
@@ -172,6 +211,7 @@ function ModalEditar({ coleccion, userId, onClose, onEditado }) {
   const [nombre, setNombre] = useState(coleccion.nombre);
   const [descripcion, setDesc] = useState(coleccion.descripcion ?? "");
   const [loading, setLoading] = useState(false);
+  const [info, setInfo] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -219,6 +259,13 @@ function ModalEditar({ coleccion, userId, onClose, onEditado }) {
           <div className="col-field col-field--full">
             <label>
               Nombre <span className="col-req">*</span>
+              <InfoTrigger
+                onClick={() =>
+                  setInfo(
+                    "Puedes cambiar el nombre para mantener la colección identificable y alineada con los productos que contiene.",
+                  )
+                }
+              />
             </label>
             <input
               required
@@ -227,7 +274,16 @@ function ModalEditar({ coleccion, userId, onClose, onEditado }) {
             />
           </div>
           <div className="col-field col-field--full">
-            <label>Descripción</label>
+            <label>
+              Descripción
+              <InfoTrigger
+                onClick={() =>
+                  setInfo(
+                    "Actualiza la descripción cuando cambie el tema, temporada o propósito de la colección.",
+                  )
+                }
+              />
+            </label>
             <textarea
               rows={3}
               value={descripcion}
@@ -252,6 +308,7 @@ function ModalEditar({ coleccion, userId, onClose, onEditado }) {
           </div>
         </form>
       </div>
+      {info && <ModalInformacionInputs text={info} setmodal={setInfo} />}
     </div>
   );
 }
@@ -272,6 +329,7 @@ function ModalDetalle({
   const [addMode, setAddMode] = useState(false);
   const [selAdd, setSelAdd] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [info, setInfo] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -376,6 +434,13 @@ function ModalDetalle({
           <div className="col-section-bar">
             <span className="col-section-bar__label">
               Productos en esta colección
+              <InfoTrigger
+                onClick={() =>
+                  setInfo(
+                    "Una colección agrupa productos relacionados para que puedas organizarlos y presentarlos juntos en tu tienda.",
+                  )
+                }
+              />
               <span className="col-section-bar__count">
                 {loading ? "…" : productosCol.length}
               </span>
@@ -392,6 +457,13 @@ function ModalDetalle({
             <div className="col-add-panel">
               <p className="col-add-panel__hint">
                 Selecciona los productos que quieres agregar:
+                <InfoTrigger
+                  onClick={() =>
+                    setInfo(
+                      "Puedes seleccionar uno o varios productos disponibles. Los productos que ya pertenecen a la colección no aparecen en esta lista.",
+                    )
+                  }
+                />
               </p>
               <div className="col-product-picker">
                 {disponibles.map((p) => (
@@ -480,6 +552,7 @@ function ModalDetalle({
           </button>
         </div>
       </div>
+      {info && <ModalInformacionInputs text={info} setmodal={setInfo} />}
     </div>
   );
 }

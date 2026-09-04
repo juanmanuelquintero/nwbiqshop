@@ -11,6 +11,7 @@ class ProductoCreate(BaseModel):
     precio:      int
     tipo:        str           # "simple" | "variantes"
     cantidad:    int
+    precio_alpormayor: int | None = None
     # Para tipo "simple"
     marca:       str | None = None
     referencia:  str | None = None
@@ -21,11 +22,12 @@ class ProductoCreate(BaseModel):
 
 
 class ProductoUpdate(BaseModel):
-    id_usuario:  int
-    nombre:      str | None = None
-    descripcion: str | None = None
-    precio:      int | None = None
-    estado:      bool | None = None
+    id_usuario:        int
+    nombre:            str | None = None
+    descripcion:       str | None = None
+    precio:            int | None = None
+    precio_alpormayor: int | None = None
+    estado:            bool | None = None
 
 
 class ProductoEstadoUpdate(BaseModel):

@@ -2,6 +2,7 @@ from models.collections import ColeccionProducto, Coleccion
 from models.shop import Shop
 from models.products import Producto
 from fastapi import HTTPException
+from services.notificaciones import Crearnotificaion
 
 def crearcoleccion(db, datos):
     buscartienda = db.query(Shop).filter(
@@ -22,6 +23,7 @@ def crearcoleccion(db, datos):
     db.refresh(crearcol)
 
     if  datos.producto_id == None:
+        Crearnotificaion(db, buscartienda.id, "Se creo una coleccion", "colecciones")
         return "coleccion creada"
 
     for p in datos.producto_id:
@@ -47,6 +49,7 @@ def crearcoleccion(db, datos):
         db.add(crearproductos)
 
     db.commit()
+    Crearnotificaion(db, buscartienda.id, "Se creo una coleccion", "colecciones")
 
     return "coleccion creada y productos agregados"
 
@@ -117,6 +120,7 @@ def agregarproductoscoleccion(db, datos):
         db.add(crearproductos)
 
     db.commit()
+    Crearnotificaion(db, usuariocoleccion.id, "Se agregaron productos a una coleccion", "colecciones")
 
     return "coleccion creada y productos agregados"
 
@@ -142,6 +146,7 @@ def modificarcoleccion(db, datos):
 
     db.commit()
     db.refresh(buscarcoleccion)
+    Crearnotificaion(db, usuariocoleccion.id, "Se actualizo una coleccion", "colecciones")
 
     return "coleccion modificada"
 
@@ -181,6 +186,7 @@ def eliminarproductoColeccion(db, datos):
 
     db.delete(relacion)
     db.commit()
+    Crearnotificaion(db, tienda.id, "Se elimino un producto de una coleccion", "colecciones")
 
     return "Producto eliminado de la colección"
 
@@ -206,6 +212,7 @@ def cambiarestadocoleccion(db, datos):
     coleccion.estado = not coleccion.estado
     db.commit()
     db.refresh(coleccion)
+    Crearnotificaion(db, tienda.id, "Se cambio el estado de una coleccion", "colecciones")
 
     estado_texto = "activada" if coleccion.estado else "desactivada"
     return {
@@ -245,5 +252,6 @@ def eliminarcoleccion(db, datos):
     db.delete(coleccion)
 
     db.commit()
+    Crearnotificaion(db, tienda.id, "Se elimino una coleccion", "colecciones")
 
     return "Colección eliminada correctamente"

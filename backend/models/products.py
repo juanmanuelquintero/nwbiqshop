@@ -21,6 +21,8 @@ class Producto(Base):
 
     precio = Column(Integer, nullable=False)
 
+    precio_alpormayor = Column(Integer, nullable=True)
+
     estado = Column(Boolean, default=True, nullable=False)
 
     creado_fecha = Column(

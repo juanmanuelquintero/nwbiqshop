@@ -3,8 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { TraerTiendaCliente } from "../api/axios";
 import { mostrarAlerta } from "../utils/alerts";
 import "../styles/catalogoplantillas.css";
-import Plantilla1 from "../themes/Plantilla1";
 import Plantilla2 from "../themes/Plantilla2";
+import Plantilla1 from "../themes/Plantilla1";
+import Plantilla3 from "../themes/Plantilla3";
+import Plantilla4 from "../themes/Plantilla4";
 
 function Tienda404({ dominio }) {
   const nav = useNavigate();
@@ -51,8 +53,12 @@ function Catalogosplantillas() {
     try {
       setcargando(true);
       const res = await TraerTiendaCliente(tienda);
-      console.log(res.data);
       settiendacontrada(res.data);
+      console.log(res.data);
+      const bolsa = localStorage.getItem("bolsa");
+      if (bolsa) {
+        localStorage.removeItem("bolsa");
+      }
       setplantilla(res.data?.plantilla || 1);
       setcargando(false);
     } catch (err) {
@@ -71,9 +77,11 @@ function Catalogosplantillas() {
       case 2:
         return <Plantilla2 tienda={tiendaencontrada} dominio={tienda} />;
       case 3:
-        return <h1>hola3</h1>;
+        return <Plantilla3 tienda={tiendaencontrada} dominio={tienda} />;
+      case 4:
+        return <Plantilla4 tienda={tiendaencontrada} dominio={tienda} />;
       default:
-        return <h1>hola4</h1>;
+        return <h1>hola5</h1>;
     }
   };
 

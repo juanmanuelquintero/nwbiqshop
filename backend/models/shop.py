@@ -21,7 +21,7 @@ class Shop(Base):
 
     descripcion = Column(String(500), nullable=False)
 
-    sueldo_mensual = Column(String(50), nullable=False)
+    sueldo_mensual = Column(String(50), nullable=True)
 
     actividad = Column(String(150), nullable=False)
 

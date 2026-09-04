@@ -13,7 +13,11 @@ class PedidoCreate(BaseModel):
     """Payload que envía el cliente para crear un pedido."""
     dominio: str              # dominio de la tienda
     productos: list[ItemPedido]
-    correo: str | None = None
+    correo: str 
+    nombresyapellidos: str 
+    telefono: str 
+    ciudad: str 
+    direccion: str 
 
 
 class PedidoEstadoUpdate(BaseModel):
@@ -25,3 +29,13 @@ class PedidoEstadoUpdate(BaseModel):
 class VerDetallePedido(BaseModel):
     id_usuario: int
     id_pedido: int
+
+
+class BuscarPedidos(BaseModel):
+    correo: str | None = None
+    telefono: str | None = None 
+
+class AsignarNumeroGuia(BaseModel):
+    id_usuario: int
+    id_pedido: int
+    numeroguia: str

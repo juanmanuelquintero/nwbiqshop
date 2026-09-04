@@ -2,6 +2,7 @@ from models.promociones import Promocion, PromocionProducto, PromocionUnitaria
 from models.shop import Shop
 from fastapi import HTTPException
 from models.products import Producto
+from services.notificaciones import Crearnotificaion
 
 def traerpromociontienda(db, id_usuario):
     buscartienda = db.query(Shop).filter(
@@ -52,6 +53,7 @@ def modificarpromociontienda(db, datos):
 
     db.commit()
     db.refresh(buscarpromocion)
+    Crearnotificaion(db, buscartienda.id, "Se actualizo una promocion", "promociones")
 
     return "promocion actualizada"
 
@@ -73,6 +75,7 @@ def cambiarestadopromociontienda(db, id_usuario):
     buscarpromocion.estado = not buscarpromocion.estado
 
     db.commit()
+    Crearnotificaion(db, buscartienda.id, "Se cambio el estado de una promocion", "promociones")
 
     return "estado de la promocion cambiado"
 
@@ -149,6 +152,7 @@ def asignarproductospromocion(db, datos):
         db.add(productonuevo)
 
     db.commit()
+    Crearnotificaion(db, buscartienda.id, "Se agregaron productos a una promocion", "promociones")
 
     return "productos agregados"
 
@@ -177,6 +181,7 @@ def eliminarpoductospromocion(db, datos):
 
     db.delete(buscarproductopromocion)
     db.commit()
+    Crearnotificaion(db, buscartienda.id, "Se elimino un producto de una promocion", "promociones")
 
     return "se elimino el producto correctamente"
 
@@ -246,6 +251,7 @@ def crearpromocionunitaria(db, datos):
     db.add(promocionunitarianueva)
     db.commit()
     db.refresh(promocionunitarianueva)
+    Crearnotificaion(db, buscartienda.id, "Se creo una promocion unitaria", "promociones")
 
     return "promocion unitaria creada"
 
@@ -270,6 +276,7 @@ def modificarpromocionunitaria(db, datos):
 
     db.commit()
     db.refresh(buscarpromocionunitaria)
+    Crearnotificaion(db, buscartienda.id, "Se actualizo una promocion unitaria", "promociones")
 
     return "promocion unitaria modificada"
 
@@ -293,5 +300,6 @@ def cambiarestadopromocionunitaria(db, datos):
 
     db.commit()
     db.refresh(buscarpromocionunitaria)
+    Crearnotificaion(db, buscartienda.id, "Se cambio el estado de una promocion unitaria", "promociones")
 
     return "se cambio el estado de la promocion unitaria"

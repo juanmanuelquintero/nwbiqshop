@@ -1,6 +1,7 @@
 from models.styles import Estilos
 from models.shop import Shop
 from fastapi import HTTPException
+from services.notificaciones import Crearnotificaion
 
 def modificarestilos(db, datos):
     buscartienda = db.query(Shop).filter(
@@ -37,6 +38,7 @@ def modificarestilos(db, datos):
 
     db.commit()
     db.refresh(traerestilo)
+    Crearnotificaion(db, buscartienda.id, "Se actualizaron los estilos", "estilos")
 
     return "estilo actualizado"
 

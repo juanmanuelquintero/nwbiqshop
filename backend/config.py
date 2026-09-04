@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     # Cores origins
     #========================================================================
     cors_origins: list[str] = [
-        "http://localhost:5173"
+        "https://nwbiqshop.nwbiq.com"
     ]
 
     @property

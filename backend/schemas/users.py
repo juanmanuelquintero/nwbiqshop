@@ -15,9 +15,7 @@ class UseryshopCreate(BaseModel):
     nombre: str 
     dominio: str 
     descripcion: str 
-    sueldo_mensual: str 
     actividad: str 
-    pasarela_pagos: bool 
     direccion: str | None = None
     telefono: str | None = None
 

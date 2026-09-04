@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8000";
+const API_URL = "https://nwbiqshop.nwbiq.com/api";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -28,6 +28,13 @@ export const Crearcuenta = async (datos) => {
 
 export const TraerTienda = async (user) => {
   const res = await api.get(`/traer-tienda/${user}`);
+  return res;
+};
+
+export const TraerNotificaciones = async (id_usuario) => {
+  const res = await api.get("/traer-notificaciones", {
+    params: { id_usuario },
+  });
   return res;
 };
 
@@ -269,6 +276,29 @@ export const CambiarEstadoPedido = async (datos) => {
   return res;
 };
 
+export const AsignarNumeroGuia = async (datos) => {
+  // datos: { id_usuario, id_pedido, numeroguia }
+  const res = await api.post("/asignar-guia", datos);
+  return res;
+};
+
+export const BuscarPedidos = async (datos) => {
+  // datos: { correo: str | None, telefono: str | None }
+  const res = await api.post("/buscar-pedidos", datos);
+  return res;
+};
+
+export const BuscarPedidosCliente = async (datos) => {
+  // datos: { correo: str | None, telefono: str | None }
+  const res = await api.post("/buscar-pedidos", datos);
+  return res;
+};
+
+export const TraerProductosPedido = async (id_pedido) => {
+  const res = await api.get(`/traer-productos-pedido/${id_pedido}`);
+  return res;
+};
+
 /*══════════════════════════════════════════
   Productos cliente
   ══════════════════════════════════════════*/
@@ -293,5 +323,356 @@ export const EliminarVariante = async (variante_id, id_usuario) => {
 export const HacerPedido = async (datos) => {
   // datos: { dominio, productos: [{producto_id, id_variante, tipo, cantidad}], correo }
   const res = await api.post("/hacer-pedido", datos);
+  return res;
+};
+
+/* ══════════════════════════════════════════
+   Alimentos
+══════════════════════════════════════════ */
+export const CrearAlimento = async (datos) => {
+  // datos puede incluir: id_usuario, nombre, precio, descripcion,
+  // tiempo_preparacion, disponible, ingredientes (array), imagenFile (File)
+  const fd = new FormData();
+  fd.append("id_usuario", datos.id_usuario);
+  fd.append("nombre", datos.nombre);
+  fd.append("precio", datos.precio);
+  if (datos.descripcion != null) fd.append("descripcion", datos.descripcion);
+  if (datos.tiempo_preparacion != null)
+    fd.append("tiempo_preparacion", datos.tiempo_preparacion);
+  fd.append("disponible", datos.disponible ?? true);
+  fd.append("ingredientes", JSON.stringify(datos.ingredientes ?? []));
+  if (datos.imagenFile instanceof File) fd.append("imagen", datos.imagenFile);
+  const res = await api.post("/crear-alimentos", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res;
+};
+
+export const TraerAlimentos = async (id_usuario) => {
+  const res = await api.get(`/traer-alimentos/${id_usuario}`);
+  return res;
+};
+
+export const TraerAlimentoPublico = async (id_alimento) => {
+  // Endpoint público — retorna el alimento con sus ingredientes
+  const res = await api.get(`/alimento/${id_alimento}`);
+  return res;
+};
+
+export const ModificarAlimento = async (id_alimento, datos) => {
+  // datos puede incluir: id_usuario, nombre, precio, descripcion,
+  // tiempo_preparacion, disponible, imagenFile (File), imagen_borrada ("1")
+  const fd = new FormData();
+  fd.append("id_usuario", datos.id_usuario);
+  if (datos.nombre != null) fd.append("nombre", datos.nombre);
+  if (datos.descripcion != null) fd.append("descripcion", datos.descripcion);
+  if (datos.precio != null) fd.append("precio", datos.precio);
+  if (datos.tiempo_preparacion != null)
+    fd.append("tiempo_preparacion", datos.tiempo_preparacion);
+  if (datos.disponible != null) fd.append("disponible", datos.disponible);
+  if (datos.imagenFile instanceof File) {
+    fd.append("imagen", datos.imagenFile);
+  } else if (datos.imagen_borrada === "1") {
+    fd.append("imagen_borrada", "1");
+  }
+  const res = await api.put(`/modificar-alimentos/${id_alimento}`, fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res;
+};
+
+export const CambiarEstadoAlimento = async (id_alimento, datos) => {
+  // datos: { id_usuario, estado }
+  const res = await api.patch(`/estado-alimento/${id_alimento}`, datos);
+  return res;
+};
+
+export const ModificarIngrediente = async (id_ingrediente, datos) => {
+  // datos: IngredienteUpdate — incluye id_usuario + campos opcionales
+  const res = await api.patch(`/ingredientes/${id_ingrediente}`, datos);
+  return res;
+};
+
+/* ══════════════════════════════════════════
+   Colecciones de Alimentos
+══════════════════════════════════════════ */
+export const CrearColeccionAlimentos = async (datos) => {
+  // datos: { id_usuario, titulo, descripcion?, alimento_ids? }
+  const res = await api.post("/colecciones-alimentos/crear", datos);
+  return res;
+};
+
+export const TraerColeccionesAlimentos = async (id_usuario) => {
+  const res = await api.get(`/colecciones-alimentos/traer/${id_usuario}`);
+  return res;
+};
+
+export const TraerItemsColeccionAlimentos = async (datos) => {
+  // datos: { id_usuario, coleccion_id }
+  const res = await api.post("/colecciones-alimentos/items", datos);
+  return res;
+};
+
+export const AgregarAlimentosColeccion = async (datos) => {
+  // datos: { id_usuario, coleccion_id, alimento_ids }
+  const res = await api.post("/colecciones-alimentos/agregar-alimentos", datos);
+  return res;
+};
+
+export const QuitarAlimentoColeccion = async (datos) => {
+  // datos: { id_usuario, coleccion_id, alimento_id }
+  const res = await api.delete("/colecciones-alimentos/quitar-alimento", {
+    data: datos,
+  });
+  return res;
+};
+
+export const ActualizarColeccionAlimentos = async (datos) => {
+  // datos: { id_usuario, id, titulo?, descripcion? }
+  const res = await api.patch("/colecciones-alimentos/actualizar", datos);
+  return res;
+};
+
+export const CambiarEstadoColeccionAlimentos = async (datos) => {
+  // datos: { id_usuario, id }
+  const res = await api.patch("/colecciones-alimentos/estado", datos);
+  return res;
+};
+
+export const EliminarColeccionAlimentos = async (datos) => {
+  // datos: { id_usuario, id }
+  const res = await api.delete("/colecciones-alimentos/eliminar", {
+    data: datos,
+  });
+  return res;
+};
+
+/* ══════════════════════════════════════════
+   Pedidos de Alimentos
+══════════════════════════════════════════ */
+export const TraerPedidosAlimentos = async (id_usuario) => {
+  const res = await api.get(`/pedidos-alimentos/traer/${id_usuario}`);
+  return res;
+};
+
+export const VerDetallePedidoAlimento = async (datos) => {
+  // datos: { id_usuario, pedido_id }
+  const res = await api.post("/pedidos-alimentos/detalle", datos);
+  return res;
+};
+
+export const CambiarEstadoPedidoAlimento = async (datos) => {
+  // datos: { id_usuario, pedido_id, estado }
+  const res = await api.patch("/pedidos-alimentos/estado", datos);
+  return res;
+};
+
+/* ══════════════════════════════════════════
+   Combos
+══════════════════════════════════════════ */
+export const CrearCombo = async (datos) => {
+  // datos: { id_usuario, nombre, descripcion?, precio, alimentos?: [{alimento_id, cantidad}] }
+  const res = await api.post("/combos/crear", datos);
+  return res;
+};
+
+export const TraerCombos = async (id_usuario) => {
+  const res = await api.get(`/combos/traer/${id_usuario}`);
+  return res;
+};
+
+export const TraerAlimentosCombo = async (datos) => {
+  // datos: { id_usuario, combo_id }
+  const res = await api.post("/combos/alimentos", datos);
+  return res;
+};
+
+export const ActualizarCombo = async (datos) => {
+  // datos: { id_usuario, id, nombre?, descripcion?, precio? }
+  const res = await api.patch("/combos/actualizar", datos);
+  return res;
+};
+
+export const AgregarAlimentosCombo = async (datos) => {
+  // datos: { id_usuario, combo_id, alimentos: [{alimento_id, cantidad}] }
+  const res = await api.post("/combos/agregar-alimentos", datos);
+  return res;
+};
+
+export const QuitarAlimentoCombo = async (datos) => {
+  // datos: { id_usuario, combo_id, alimento_id }
+  const res = await api.delete("/combos/quitar-alimento", { data: datos });
+  return res;
+};
+
+export const CambiarEstadoCombo = async (datos) => {
+  // datos: { id_usuario, id }
+  const res = await api.patch("/combos/estado", datos);
+  return res;
+};
+
+export const EliminarCombo = async (datos) => {
+  // datos: { id_usuario, id }
+  const res = await api.delete("/combos/eliminar", { data: datos });
+  return res;
+};
+
+//==================================================================
+// Al por mayor
+//==================================================================
+
+export const TraerAlPorMayor = async (id_usuario) => {
+  const res = await api.get(`/traer-alpormayor/${id_usuario}`);
+  return res;
+};
+
+export const ActualizarAlPorMayor = async (datos) => {
+  const res = await api.patch(`/actualizar-alpormayor`, datos);
+  return res;
+};
+
+export const CambiarEstadoAlPorMayor = async (id_usuario) => {
+  const res = await api.post(`/cambiar-estado-alpormayor/${id_usuario}`);
+  return res;
+};
+//=======================================================
+// Plantilla
+//=======================================================
+export const TraerPlantillaTienda = async (id_usuario) => {
+  const res = await api.get(`/traer-plantilla/${id_usuario}`);
+  return res;
+};
+
+export const ActualizarPlantilla = async (datos) => {
+  const res = await api.patch(`/actualizar-plantilla`, datos);
+  return res;
+};
+//========================================================
+// Filtros
+//========================================================
+export const CantidadProductos = async (id_usuario) => {
+  const res = await api.get(`/cantidad-productos/${id_usuario}`);
+  return res;
+};
+export const CantidadPedidos = async (id_usuario) => {
+  const res = await api.get(`/cantidad-pedidos/${id_usuario}`);
+  return res;
+};
+//========================================================
+// Tu info
+//========================================================
+export const TraerInformacion = async (id_usuario) => {
+  const res = await api.get(`/traer-tu-info/${id_usuario}`);
+  return res;
+};
+
+export const TraerInformacionCliente = async (dominio) => {
+  const res = await api.get(`/traer-la-info/${dominio}`);
+  return res;
+};
+
+export const ActualizarTuInformacion = async (datos) => {
+  const res = await api.patch("/actualizar-tu-informacion", datos);
+  return res;
+};
+
+export const CrearQueHago = async (datos) => {
+  const res = await api.post("/crear-que-hago", datos);
+  return res;
+};
+
+export const ActualizarQueHago = async (datos) => {
+  const res = await api.patch("/actualizar-que-hago", datos);
+  return res;
+};
+
+export const EliminarQueHago = async (datos) => {
+  const res = await api.delete("/eliminar-que-hago", { data: datos });
+  return res;
+};
+
+export const CrearMisEspecialidades = async (datos) => {
+  const res = await api.post("/crear-mis-especialidades", datos);
+  return res;
+};
+
+export const ActualizarMisEspecialidades = async (datos) => {
+  const res = await api.patch("/actualizar-mis-especialidades", datos);
+  return res;
+};
+
+export const EliminarMisEspecialidades = async (datos) => {
+  const res = await api.delete("/eliminar-mis-especialidades", { data: datos });
+  return res;
+};
+
+export const CrearComoFunciona = async (datos) => {
+  const res = await api.post("/crear-como-funciona", datos);
+  return res;
+};
+
+export const ActualizarComoFunciona = async (datos) => {
+  const res = await api.patch("/actualizar-como-funciona", datos);
+  return res;
+};
+
+export const EliminarComoFunciona = async (datos) => {
+  const res = await api.delete("/eliminar-como-funciona", { data: datos });
+  return res;
+};
+
+export const CrearInformacionServicio = async (datos) => {
+  const res = await api.post("/crear-informacion-servicio", datos);
+  return res;
+};
+
+export const ActualizarInformacionServicio = async (datos) => {
+  const res = await api.patch("/actualizar-informacion-servicio", datos);
+  return res;
+};
+
+export const EliminarInformacionServicio = async (datos) => {
+  const res = await api.delete("/eliminar-informacion-servicio", {
+    data: datos,
+  });
+  return res;
+};
+
+export const CrearMiExperiencia = async (datos) => {
+  const res = await api.post("/crear-mi-experiencia", datos);
+  return res;
+};
+
+export const ActualizarMiExperiencia = async (datos) => {
+  const res = await api.patch("/actualizar-mi-experiencia", datos);
+  return res;
+};
+
+export const EliminarMiExperiencia = async (datos) => {
+  const res = await api.delete("/eliminar-mi-experiencia", { data: datos });
+  return res;
+};
+
+export const CrearPorqueTrabajarConmigo = async (datos) => {
+  const res = await api.post("/crear-porque-trabajar-conmigo", datos);
+  return res;
+};
+
+export const ActualizarPorqueTrabajarConmigo = async (datos) => {
+  const res = await api.patch("/actualizar-porque-trabajar-conmigo", datos);
+  return res;
+};
+
+export const EliminarPorqueTrabajarConmigo = async (datos) => {
+  const res = await api.delete("/eliminar-porque-trabajar-conmigo", {
+    data: datos,
+  });
+  return res;
+};
+//==============================================================
+// suscripciones
+//==============================================================
+export const VerificarPago = async (id_usuario) => {
+  const res = await api.get(`/verificar-pago/${id_usuario}`);
   return res;
 };

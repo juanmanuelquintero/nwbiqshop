@@ -1,0 +1,591 @@
+.contenedor-modal-suscripcion {
+  position: fixed;
+  inset: 0;
+
+  width: 100%;
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 20px;
+
+  background: rgba(20, 40, 90, 0.45);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  overflow-y: auto;
+
+  z-index: 9999;
+
+  box-sizing: border-box;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modal-suscripcion {
+  position: relative;
+
+  width: 100%;
+  max-width: 650px;
+
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  background: linear-gradient(145deg, #ffffff, #f7f9ff);
+
+  border: 1px solid rgba(255, 255, 255, 0.8);
+
+  border-radius: 28px;
+
+  box-shadow:
+    0 30px 80px rgba(10, 40, 100, 0.3),
+    0 10px 30px rgba(34, 89, 215, 0.15);
+
+  animation: aparecerSuscripcion 0.35s ease;
+
+  z-index: 2;
+}
+
+/* Scroll bonito */
+
+.modal-suscripcion::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-suscripcion::-webkit-scrollbar-thumb {
+  background: var(--color-primary-light);
+  border-radius: 20px;
+}
+
+/* =========================
+   CONTENIDO
+========================= */
+
+.suscripcion-contenido {
+  padding: 40px;
+}
+
+/* =========================
+   BOTON CERRAR
+========================= */
+
+.cerrar-modal-suscripcion {
+  position: absolute;
+
+  top: 18px;
+  right: 18px;
+
+  width: 38px;
+  height: 38px;
+
+  border: none;
+
+  border-radius: 50%;
+
+  background: #f1f4fa;
+
+  color: var(--color-text);
+
+  font-size: 26px;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+
+  z-index: 10;
+}
+
+.cerrar-modal-suscripcion:hover {
+  transform: rotate(90deg);
+
+  background: var(--color-primary);
+
+  color: white;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.suscripcion-header {
+  text-align: center;
+
+  margin-bottom: 25px;
+}
+
+.badge-plan {
+  display: inline-flex;
+
+  padding: 7px 15px;
+
+  margin-bottom: 15px;
+
+  border-radius: 30px;
+
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-light)
+  );
+
+  color: white;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  letter-spacing: 1px;
+
+  box-shadow: 0 8px 20px rgba(34, 89, 215, 0.25);
+}
+
+.suscripcion-header h2 {
+  margin: 0;
+
+  color: var(--color-text);
+
+  font-size: 30px;
+
+  line-height: 1.2;
+}
+
+.suscripcion-header p {
+  max-width: 500px;
+
+  margin: 15px auto 0;
+
+  color: #65708a;
+
+  line-height: 1.6;
+
+  font-size: 15px;
+}
+
+/* =========================
+   PRECIO
+========================= */
+
+.precio-suscripcion {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  margin-top: 30px;
+}
+
+.precio-moneda {
+  align-self: flex-start;
+
+  margin-top: 12px;
+
+  color: var(--color-primary);
+
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.precio-valor {
+  color: var(--color-primary);
+
+  font-size: 80px;
+  font-weight: 800;
+
+  line-height: 1;
+}
+
+.precio-info {
+  display: flex;
+  flex-direction: column;
+
+  margin-left: 8px;
+
+  color: var(--color-text);
+}
+
+.precio-info span {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.precio-info small {
+  color: #7c8598;
+
+  margin-top: 3px;
+}
+
+/* =========================
+   CONVERSION
+========================= */
+
+.conversion-pesos {
+  width: fit-content;
+
+  margin: 8px auto 30px;
+
+  padding: 8px 15px;
+
+  background: #edf3ff;
+
+  border: 1px solid #d7e4ff;
+
+  border-radius: 30px;
+
+  color: #65708a;
+
+  font-size: 13px;
+}
+
+.conversion-pesos strong {
+  color: var(--color-primary);
+}
+
+/* =========================
+   BENEFICIOS
+========================= */
+
+.beneficios-suscripcion {
+  padding: 25px;
+
+  background: white;
+
+  border: 1px solid var(--color-border);
+
+  border-radius: 20px;
+
+  box-shadow: 0 10px 30px rgba(34, 89, 215, 0.07);
+}
+
+.beneficios-suscripcion h3 {
+  margin: 0 0 20px;
+
+  text-align: center;
+
+  font-size: 18px;
+}
+
+.lista-beneficios {
+  display: flex;
+  flex-direction: column;
+
+  gap: 13px;
+}
+
+.beneficio {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  color: #59637a;
+
+  font-size: 14px;
+
+  line-height: 1.4;
+}
+
+.check-beneficio {
+  flex-shrink: 0;
+
+  width: 23px;
+  height: 23px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 50%;
+
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-light)
+  );
+
+  color: white;
+
+  font-size: 13px;
+  font-weight: bold;
+
+  box-shadow: 0 5px 10px rgba(34, 89, 215, 0.2);
+}
+
+/* =========================
+   VER MAS
+========================= */
+
+.btn-ver-beneficios {
+  display: block;
+
+  margin: 20px auto 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: var(--color-primary);
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.btn-ver-beneficios:hover {
+  color: var(--color-primary-light);
+}
+
+/* =========================
+   MENSAJE DE CONFIANZA
+========================= */
+
+.mensaje-confianza {
+  display: flex;
+  align-items: center;
+
+  gap: 15px;
+
+  margin-top: 25px;
+
+  padding: 18px;
+
+  border-radius: 18px;
+
+  background: linear-gradient(135deg, #eef5ff, #f8fbff);
+
+  border: 1px solid #dbe8ff;
+}
+
+.icono-confianza {
+  flex-shrink: 0;
+
+  width: 50px;
+  height: 50px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 15px;
+
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-light)
+  );
+
+  font-size: 22px;
+
+  box-shadow: 0 8px 20px rgba(34, 89, 215, 0.2);
+}
+
+.mensaje-confianza strong {
+  color: var(--color-text);
+
+  font-size: 14px;
+}
+
+.mensaje-confianza p {
+  margin: 5px 0 0;
+
+  color: #69748c;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+/* =========================
+   BOTON PRINCIPAL
+========================= */
+
+.btn-suscribirse {
+  width: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 25px;
+
+  padding: 16px;
+
+  border: none;
+
+  border-radius: 15px;
+
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-medium),
+    var(--color-primary-light)
+  );
+
+  color: white;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 12px 25px rgba(34, 89, 215, 0.3);
+
+  transition: 0.25s ease;
+}
+
+.btn-suscribirse span {
+  font-size: 22px;
+
+  transition: 0.25s;
+}
+
+.btn-suscribirse:hover {
+  transform: translateY(-3px);
+
+  box-shadow: 0 18px 35px rgba(34, 89, 215, 0.4);
+}
+
+.btn-suscribirse:hover span {
+  transform: translateX(5px);
+}
+
+/* =========================
+   TEXTO FINAL
+========================= */
+
+.texto-final-suscripcion {
+  margin: 18px 0 0;
+
+  text-align: center;
+
+  color: #8790a3;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+/* =========================
+   DECORACIONES
+========================= */
+
+.decoracion {
+  position: fixed;
+
+  border-radius: 50%;
+
+  filter: blur(5px);
+
+  pointer-events: none;
+
+  z-index: 1;
+}
+
+.decoracion-1 {
+  width: 180px;
+  height: 180px;
+
+  top: 10%;
+  left: 10%;
+
+  background: var(--color-primary);
+
+  opacity: 0.35;
+}
+
+.decoracion-2 {
+  width: 250px;
+  height: 250px;
+
+  right: 8%;
+  bottom: 5%;
+
+  background: var(--color-primary-light);
+
+  opacity: 0.3;
+}
+
+.decoracion-3 {
+  width: 100px;
+  height: 100px;
+
+  top: 20%;
+  right: 15%;
+
+  background: var(--color-primary-medium);
+
+  opacity: 0.4;
+}
+
+/* =========================
+   ANIMACION
+========================= */
+
+@keyframes aparecerSuscripcion {
+  from {
+    opacity: 0;
+
+    transform: translateY(30px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 600px) {
+  .contenedor-modal-suscripcion {
+    padding: 10px;
+    align-items: flex-start;
+  }
+
+  .modal-suscripcion {
+    margin: 10px 0;
+
+    max-height: 95vh;
+
+    border-radius: 22px;
+  }
+
+  .suscripcion-contenido {
+    padding: 30px 20px;
+  }
+
+  .suscripcion-header h2 {
+    font-size: 24px;
+
+    padding-right: 25px;
+    padding-left: 25px;
+  }
+
+  .precio-valor {
+    font-size: 65px;
+  }
+
+  .beneficios-suscripcion {
+    padding: 20px 15px;
+  }
+
+  .mensaje-confianza {
+    align-items: flex-start;
+  }
+
+  .decoracion-1,
+  .decoracion-2 {
+    display: none;
+  }
+}

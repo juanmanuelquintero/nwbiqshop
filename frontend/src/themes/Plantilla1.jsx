@@ -1,395 +1,1118 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/plantilla1.css";
+import { MirarVariantes, TraerProductosDominio } from "../api/axios";
+import CarritoModal from "../components/CarritoModal";
+import GestionTallas from "../components/GestionTallas";
+import { consolidarBolsa } from "../utils/bolsa";
 
-import Dudaspedido    from "../components/plantilla1duda";
-import ProductCard    from "../components/p1/ProductCard";
-import ModalProducto  from "../components/p1/ModalProducto";
-import SeccionTallas  from "../components/p1/SeccionTallas";
-import FooterP1       from "../components/p1/FooterP1";
-import CarritoPanel   from "../components/p1/CarritoPanel";
-import CarritoModal   from "../components/p1/CarritoModal";
-import { TraerProductosDominio } from "../api/axios";
+export default function Plantilla1({ tienda, dominio }) {
+  const [productosDominio, setProductosDominio] = useState([]);
+  const [cargandoProductosDominio, setCargandoProductosDominio] =
+    useState(false);
+  const [bolsaAbierta, setBolsaAbierta] = useState(false);
+  const [itemsBolsa, setItemsBolsa] = useState([]);
+  const [productoDetalle, setProductoDetalle] = useState(null);
+  const [variantesDetalle, setVariantesDetalle] = useState([]);
+  const [varianteDetalle, setVarianteDetalle] = useState(null);
+  const [tallaDetalle, setTallaDetalle] = useState(null);
+  const [cantidadDetalle, setCantidadDetalle] = useState(1);
+  const [cargandoDetalle, setCargandoDetalle] = useState(false);
+  const [errorDetalle, setErrorDetalle] = useState(false);
+  const navigate = useNavigate();
+  const listadeactividades = [
+    "Venta de calzado",
+    "Venta de ropa",
+    "Venta de joyería",
+    "Venta de gafas y accesorios",
+  ];
+  const actividadtienda = tienda.actividad;
+  const guiaTallasDestino = {
+    "Venta de calzado": "#guia-tallas-calzado",
+    "Venta de ropa": "#guia-tallas",
+    "Venta de joyería": "#guia-tallas-joyeria",
+    "Venta de gafas y accesorios": "#guia-medidas-gafas",
+  }[actividadtienda];
+  const estilos = tienda.estilos ?? {};
+  const colores = {
+    "--p1-bg": estilos.color_principal ?? "#fff3f3",
+    "--p1-secondary": estilos.color_secundario ?? "#ff9f9f",
+    "--p1-title": estilos.title_color ?? "#ab6969",
+    "--p1-text": estilos.text_color ?? "#501200",
+    "--p1-button": estilos.color_botones ?? "#ff6969",
+    "--p1-cart": estilos.color_carrito ?? "#ff8080",
+  };
+  const inicial = tienda.nombre?.trim()?.charAt(0).toUpperCase() || "T";
+  const compraPorPasarela = Boolean(tienda.pasarela_pagos);
+  const colecciones = tienda.colecciones ?? [];
+  const mensajeCompra = compraPorPasarela
+    ? "Agrega tus productos a la bolsa y finaliza tu compra de forma segura mediante nuestra pasarela de pagos."
+    : "Arma tu bolsa con los productos que quieras y, al finalizar, envíanos tu pedido para confirmarlo por WhatsApp.";
+  const promocion = tienda.datospromocion;
+  const productosPromoGeneral = tienda.productos_promo_general ?? [];
+  const productosPromoUnitaria = tienda.productos_promo_unitaria ?? [];
+  const datosAlPorMayor = tienda.datos_alpormayor ?? null;
+  const estadoAlPorMayor = datosAlPorMayor?.estado === true;
+  const cantidadMinimaMayorista = Number(datosAlPorMayor?.cantidad_minima ?? 6);
+  const formatearPrecio = (precio) =>
+    `$${Number(precio ?? 0).toLocaleString("es-CO")}`;
+  const precioPromocion = (producto, descuentoBase = 0) => {
+    if (producto.precio_final != null) return Number(producto.precio_final);
+    const precio = Number(producto.precio_original ?? producto.precio ?? 0);
+    return precio * (1 - Number(producto.descuento ?? descuentoBase) / 100);
+  };
+  const obtenerDescuentoPromocion = (producto) => {
+    const productoEnPromoGeneral =
+      promocion?.estado &&
+      productosPromoGeneral.some(
+        (productoPromo) => String(productoPromo.id) === String(producto.id),
+      );
+    const productoEnPromoUnitaria = productosPromoUnitaria.some(
+      (productoPromo) => String(productoPromo.id) === String(producto.id),
+    );
 
-/* ─────────────────────────────────────
-   PLANTILLA 1
-───────────────────────────────────── */
-function Plantilla1({ tienda, dominio }) {
-  const estilos = tienda.estilos;
+    if (!productoEnPromoGeneral && !productoEnPromoUnitaria) return 0;
+    return Number(
+      producto.descuento ??
+        (productoEnPromoGeneral ? promocion?.descuento : 0) ??
+        0,
+    );
+  };
+  const calcularPrecioMayorista = (producto, descuento = 0) => {
+    if (!estadoAlPorMayor || producto.precio_alpormayor == null) return null;
+    const precio = Number(producto.precio_alpormayor);
+    return descuento > 0 ? precio * (1 - descuento / 100) : precio;
+  };
+  const renderProducto = (producto) => {
+    const descuento = obtenerDescuentoPromocion(producto);
 
-  const [modalOpen,          setModalOpen]          = useState(false);
-  const [modal,              setmodal]               = useState(false);
-  const [productoseleccionado, setproductoseleccionado] = useState(null);
-  const [coleccionActiva,    setColeccionActiva]     = useState(null);
-  const [bolsaOpen,          setBolsaOpen]           = useState(false);
-  const [carritoModal,       setCarritoModal]        = useState(false);
-  const [itemsBolsa,         setItemsBolsa]          = useState([]);
+    const precioOriginal = Number(
+      producto.precio_original ?? producto.precio ?? 0,
+    );
 
-  // Lazy load productos sueltos
-  const [productosSueltos,   setProductosSueltos]    = useState([]);
-  const [cargandoSueltos,    setCargandoSueltos]     = useState(false);
-  const [sueltosCargados,    setSueltosCargados]     = useState(false);
-  const triggerRef = useRef(null);
+    const precioFinal =
+      descuento > 0 ? precioPromocion(producto, descuento) : precioOriginal;
 
-  const bg   = estilos?.color_principal  ?? "#ffffff";
-  const sec  = estilos?.color_secundario ?? "#2259d7";
-  const titl = estilos?.title_color      ?? "#042d78";
-  const txt  = estilos?.text_color       ?? "#242f43";
-  const btn  = estilos?.color_botones    ?? "#35a4ec";
+    const precioMayorista = calcularPrecioMayorista(producto, descuento);
 
-  const abrirmodal = (producto) => {
-    setmodal(true);
-    setproductoseleccionado(producto);
+    const ganancia =
+      precioMayorista != null
+        ? Math.max(0, precioFinal - precioMayorista)
+        : null;
+
+    return (
+      <article key={producto.id} className="p1-promo-product">
+        <div className="p1-promo-product__image-wrap">
+          {producto.imagen ? (
+            <img src={producto.imagen} alt={producto.nombre} />
+          ) : (
+            <span>✦</span>
+          )}
+
+          {descuento > 0 && <b>-{descuento}%</b>}
+        </div>
+
+        <div className="p1-promo-product__body">
+          <h3>{producto.nombre}</h3>
+
+          {descuento > 0 && (
+            <span className="p1-promo-product__original">
+              {formatearPrecio(precioOriginal)}
+            </span>
+          )}
+
+          <strong>{formatearPrecio(precioFinal)}</strong>
+
+          <button
+            type="button"
+            className="p1-promo-product__detail"
+            onClick={() => setProductoDetalle(producto)}
+          >
+            Ver detalle →
+          </button>
+        </div>
+
+        {precioMayorista != null && (
+          <div className="mayorista-info">
+            <div className="mayorista-precio">
+              <span className="mayorista-badge">MAYORISTA</span>
+
+              <div className="mayorista-detalle">
+                <span className="mayorista-cantidad">
+                  Desde {cantidadMinimaMayorista} uds.
+                </span>
+
+                <strong>{formatearPrecio(precioMayorista)}</strong>
+              </div>
+            </div>
+
+            <div className="mayorista-ganancia">
+              <span>Ganancia potencial</span>
+
+              <strong>{formatearPrecio(ganancia)}</strong>
+            </div>
+          </div>
+        )}
+      </article>
+    );
   };
 
   useEffect(() => {
-    if (sueltosCargados || !triggerRef.current || !dominio) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          observer.disconnect();
-          setCargandoSueltos(true);
-          TraerProductosDominio(dominio)
-            .then((res) => setProductosSueltos(res.data ?? []))
-            .catch(() => {})
-            .finally(() => { setCargandoSueltos(false); setSueltosCargados(true); });
-        }
-      },
-      { rootMargin: "400px" },
-    );
-    observer.observe(triggerRef.current);
-    return () => observer.disconnect();
-  }, [dominio, sueltosCargados]);
+    if (!dominio) {
+      setProductosDominio([]);
+      return;
+    }
 
-  const hayColecciones = tienda.colecciones && tienda.colecciones.length > 0;
+    let activo = true;
+    setCargandoProductosDominio(true);
+    TraerProductosDominio(dominio)
+      .then((res) => {
+        if (activo)
+          setProductosDominio(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch(() => {
+        if (activo) setProductosDominio([]);
+      })
+      .finally(() => {
+        if (activo) setCargandoProductosDominio(false);
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, [dominio]);
+
+  useEffect(() => {
+    if (!productoDetalle) return undefined;
+
+    let activo = true;
+    setCargandoDetalle(true);
+    setErrorDetalle(false);
+    setVariantesDetalle([]);
+    setVarianteDetalle(null);
+    setTallaDetalle(null);
+    setCantidadDetalle(1);
+
+    MirarVariantes(productoDetalle.id)
+      .then((res) => {
+        if (!activo) return;
+        const variantes = Array.isArray(res.data) ? res.data : [];
+        setVariantesDetalle(variantes);
+        setVarianteDetalle(variantes[0] ?? null);
+      })
+      .catch(() => {
+        if (activo) setErrorDetalle(true);
+      })
+      .finally(() => {
+        if (activo) setCargandoDetalle(false);
+      });
+
+    const cerrarConEscape = (event) => {
+      if (event.key === "Escape") setProductoDetalle(null);
+    };
+    document.addEventListener("keydown", cerrarConEscape);
+    return () => {
+      activo = false;
+      document.removeEventListener("keydown", cerrarConEscape);
+    };
+  }, [productoDetalle]);
+
+  useEffect(() => {
+    try {
+      const bolsaGuardada = JSON.parse(localStorage.getItem("bolsa") ?? "[]");
+      const bolsa = consolidarBolsa(bolsaGuardada);
+      setItemsBolsa(bolsa);
+      localStorage.setItem("bolsa", JSON.stringify(bolsa));
+    } catch {
+      setItemsBolsa([]);
+    }
+  }, []);
+
+  const idsProductosEnColecciones = new Set(
+    colecciones
+      .flatMap((coleccion) => coleccion.productos ?? [])
+      .map((producto) => String(producto.id)),
+  );
+  const productosParaAntojarse = productosDominio.filter(
+    (producto) => !idsProductosEnColecciones.has(String(producto.id)),
+  );
+  const cantidadBolsa = itemsBolsa.reduce(
+    (total, item) => total + Number(item.cantidad ?? 1),
+    0,
+  );
+  const descuentoDetalle = productoDetalle
+    ? obtenerDescuentoPromocion(productoDetalle)
+    : 0;
+  const precioDetalleOriginal = Number(
+    productoDetalle?.precio_original ?? productoDetalle?.precio ?? 0,
+  );
+  const precioDetalleFinal =
+    productoDetalle && descuentoDetalle > 0
+      ? precioPromocion(productoDetalle, descuentoDetalle)
+      : precioDetalleOriginal;
+  const precioDetalleMayorista = productoDetalle
+    ? calcularPrecioMayorista(productoDetalle, descuentoDetalle)
+    : null;
+  const gananciaDetalle =
+    precioDetalleMayorista != null
+      ? Math.max(0, precioDetalleFinal - precioDetalleMayorista)
+      : null;
+  const cantidadDisponibleDetalle =
+    tallaDetalle?.cantidad ??
+    (productoDetalle?.tipo === "simple"
+      ? Number(productoDetalle?.cantidad ?? 0)
+      : 0);
+  const aplicaMayoristaDetalle =
+    estadoAlPorMayor &&
+    precioDetalleMayorista != null &&
+    cantidadDetalle >= cantidadMinimaMayorista;
+  const precioUnitarioDetalle = aplicaMayoristaDetalle
+    ? precioDetalleMayorista
+    : precioDetalleFinal;
+  const totalDetalle = precioUnitarioDetalle * cantidadDetalle;
+  const imagenDetalle = varianteDetalle?.imagen ?? productoDetalle?.imagen;
+  const puedeAgregarDetalle =
+    cantidadDisponibleDetalle > 0 &&
+    cantidadDetalle <= cantidadDisponibleDetalle;
+  const agregarDetalleABolsa = () => {
+    if (!productoDetalle || !puedeAgregarDetalle) return;
+
+    const item = {
+      producto_id: productoDetalle.id,
+      variante_id: tallaDetalle?.id ?? null,
+      color_id: varianteDetalle?.id ?? null,
+      talla_id: tallaDetalle?.id ?? null,
+      tipo: productoDetalle.tipo,
+      cantidad: cantidadDetalle,
+      nombre: productoDetalle.nombre,
+      imagen: imagenDetalle,
+      color: varianteDetalle?.color ?? null,
+      talla: tallaDetalle?.talla ?? null,
+      marca: varianteDetalle?.marca ?? null,
+      referencia:
+        varianteDetalle?.referencia ?? productoDetalle.referencia ?? null,
+      precio_unitario: precioUnitarioDetalle,
+      precio_final: totalDetalle,
+      precio_original: precioDetalleOriginal,
+      precio_alpormayor: precioDetalleMayorista,
+      descuento: descuentoDetalle,
+    };
+    let bolsaActual = [];
+    try {
+      const bolsaGuardada = JSON.parse(localStorage.getItem("bolsa") ?? "[]");
+      bolsaActual = Array.isArray(bolsaGuardada) ? bolsaGuardada : [];
+    } catch {
+      bolsaActual = [];
+    }
+    const nuevaBolsa = consolidarBolsa([...bolsaActual, item]);
+    localStorage.setItem("bolsa", JSON.stringify(nuevaBolsa));
+    setItemsBolsa(nuevaBolsa);
+    setProductoDetalle(null);
+  };
 
   return (
-    <div
-      className="con-plantilla1"
-      style={{
-        background: `radial-gradient(ellipse at 20% 50%, ${sec}12 0%, transparent 60%),
-                     radial-gradient(ellipse at 80% 20%, ${btn}0d 0%, transparent 55%),
-                     ${bg}`,
-      }}
-    >
-      {/* ── HERO ── */}
-      <section
-        className="con-plantilla1__cont-inf"
-        style={{ background: `linear-gradient(to bottom, ${sec}33 10%, ${sec}aa 50%, ${sec} 100%)` }}
-      >
-        <div className="con-plantilla1__titulo-logo">
-          {tienda.logo ? (
-            <img src={tienda.logo} alt={tienda.nombre} className="con-plantilla1__logo-img" />
-          ) : (
-            <div
-              className="con-plantilla1__titulo-logo-alt"
-              style={{ background: `linear-gradient(135deg, ${sec}66, ${sec})`, border: `2px solid ${sec}`, color: titl }}
-            >
-              {tienda.nombre[0].toUpperCase()}
+    <div className="p1-page" style={colores}>
+      {/* ── SECCIÓN HERO / PRESENTACIÓN ── */}
+      <section className="p1-hero">
+        <div className="p1-hero__inner">
+          <div className="p1-hero__brand">
+            {tienda.logo ? (
+              <img
+                src={tienda.logo}
+                alt={tienda.nombre}
+                className="p1-hero__logo"
+              />
+            ) : (
+              <span className="p1-hero__brand-icon p1-hero__brand-icon--fallback">
+                {inicial}
+              </span>
+            )}
+            <span className="p1-hero__brand-name">
+              {tienda.nombre || "Tu tienda"}
+            </span>
+          </div>
+
+          <p className="p1-hero__activity">
+            {tienda.actividad || "Tienda online"}
+          </p>
+          <h1 className="p1-hero__title">Encuentra eso que estás buscando</h1>
+          <p className="p1-hero__desc">
+            {tienda.descripcion ||
+              "Explora nuestro catálogo y elige los productos que más te gusten."}
+          </p>
+
+          <div className="p1-hero__purchase-info">
+            <span className="p1-hero__purchase-icon">
+              {compraPorPasarela ? "✓" : "◌"}
+            </span>
+            <span>{mensajeCompra}</span>
+          </div>
+
+          <div className="p1-hero__stats">
+            <div className="p1-hero__stat">
+              <span className="p1-hero__stat-value">{colecciones.length}</span>
+              <span className="p1-hero__stat-label">COLECCIONES</span>
             </div>
-          )}
-          <h1 className="con-plantilla1__nombre" style={{ color: titl }}>{tienda.nombre}</h1>
-        </div>
+            <div className="p1-hero__stat">
+              <span className="p1-hero__stat-value">
+                {compraPorPasarela ? "Pago online" : "WhatsApp"}
+              </span>
+              <span className="p1-hero__stat-label">COMPRA</span>
+            </div>
+            <div className="p1-hero__stat">
+              <span className="p1-hero__stat-value">
+                {tienda.direccion || "Online"}
+              </span>
+              <span className="p1-hero__stat-label">UBICACIÓN</span>
+            </div>
+          </div>
 
-        <label className="con-plantilla1__actividad" style={{ color: titl }}>{tienda.actividad}</label>
-        <p className="con-plantilla1__descripcion" style={{ color: txt }}>{tienda.descripcion}</p>
-
-        <div className="con-plantilla1__datos">
-          {tienda.telefono && (
-            <span className="con-plantilla1__dato con-plantilla1__dato--tel">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.81 19.79 19.79 0 01.01 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-              </svg>
-              {tienda.telefono}
-            </span>
-          )}
-          {tienda.direccion && (
-            <span className="con-plantilla1__dato con-plantilla1__dato--dir">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              {tienda.direccion}
-            </span>
-          )}
-        </div>
-
-        <div className="con-plantilla1__hero-btns">
           <button
-            className="con-plantilla1__btn-catalogo"
-            style={{ background: btn, color: titl }}
-            onClick={() => document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" })}
+            className="p1-hero__cta"
+            onClick={() =>
+              document
+                .getElementById("p1-catalogo")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
           >
-            Ver catálogo completo ↓
+            Ver catálogo y armar mi bolsa ↓
           </button>
-          <button
-            className="con-plantilla1__btn-como"
-            style={{ borderColor: txt, color: txt }}
-            onClick={() => setModalOpen(true)}
-          >
-            ¿Cómo hago mi pedido?
-          </button>
+
+          {false && (
+            <>
+              {/* Logo + nombre */}
+              <div className="p1-hero__brand">
+                <span className="p1-hero__brand-icon">🐾</span>
+                <span className="p1-hero__brand-name">Mango French</span>
+              </div>
+
+              {/* Título principal */}
+              <h1 className="p1-hero__title">
+                Catálogo de pijamas, cobijas y camisetas por mayor
+              </h1>
+
+              {/* Descripción */}
+              <p className="p1-hero__desc">
+                Encuentra <strong>178 referencias disponibles</strong> en
+                pijamas, cobijas/mantas, camisetas y liquidaciones. Las{" "}
+                <strong>pijamas están elaboradas en piel de durazno</strong>,
+                las <strong>cobijas y mantas en piel de conejo</strong>, y la
+                línea de <strong>camisetas</strong> tiene precios por volumen.
+                En cada referencia podrás identificar fácilmente la{" "}
+                <strong>talla y disponibilidad</strong>, el precio mayorista
+                desde 6 unidades y el{" "}
+                <strong>precio sugerido de venta al detal</strong>.
+              </p>
+
+              {/* Caja WhatsApp */}
+              <div className="p1-hero__whatsapp">
+                <span className="p1-hero__whatsapp-icon">📱</span>
+                <span>
+                  Para hacer tu pedido: toma pantallazo de las referencias que
+                  te gusten y envíalas por WhatsApp
+                </span>
+              </div>
+
+              {/* Estadísticas */}
+              <div className="p1-hero__stats">
+                <div className="p1-hero__stat">
+                  <span className="p1-hero__stat-value">178</span>
+                  <span className="p1-hero__stat-label">REFERENCIAS</span>
+                </div>
+                <div className="p1-hero__stat">
+                  <span className="p1-hero__stat-value">24</span>
+                  <span className="p1-hero__stat-label">CATEGORÍAS</span>
+                </div>
+                <div className="p1-hero__stat">
+                  <span className="p1-hero__stat-value">Desde 6 uds</span>
+                  <span className="p1-hero__stat-label">PEDIDO MÍNIMO</span>
+                </div>
+              </div>
+
+              {/* Botón CTA */}
+              <button className="p1-hero__cta">
+                Bienvenid@ — baja para ver nuestro catálogo completo &darr;
+              </button>
+            </>
+          )}
         </div>
       </section>
 
-      {/* ── CATÁLOGO ── */}
-      <section id="catalogo" className="con-plantilla1__sec2">
-
-        {/* Mini brand header */}
-        <div className="section-2__titulo-logo">
-          {tienda.logo ? (
-            <img src={tienda.logo} alt={tienda.nombre} className="con-plantilla1__logo-small" />
-          ) : (
-            <div
-              className="con-plantilla1__logo-small-alt"
-              style={{ background: `linear-gradient(135deg, ${sec}66, ${sec})`, border: `1px solid ${sec}`, color: titl }}
-            >
-              {tienda.nombre[0].toUpperCase()}
-            </div>
-          )}
-          <p className="con-plantilla1__sec2-nombre" style={{ color: txt }}>{tienda.nombre}</p>
+      {/* ── SECCIÓN NAVEGACIÓN / CATEGORÍAS ── */}
+      <section className="p1-nav-cats">
+        <div className="p1-shop-nav__heading">
+          <p className="p1-shop-nav__eyebrow">Explora a tu manera</p>
+          <h2>Encuentra la colección que quieres</h2>
+          <p>Elige una colección y ve directamente a sus productos.</p>
         </div>
 
-        {/* Filtro de colecciones */}
-        {hayColecciones ? (
-          <div className="p1-filtro">
-            <p className="p1-filtro__hint" style={{ color: titl }}>Elige una colección para ver sus productos</p>
-            <div className="p1-filtro__pills">
-              {tienda.colecciones.map((col, idx) => {
-                const activa = coleccionActiva === col.coleccion_nombre;
-                const hues   = ["", "cc", "aa", "dd", "88", "bb"];
-                const shade  = hues[idx % hues.length];
+        {colecciones.length > 0 ? (
+          <div className="p1-shop-nav__collections">
+            {colecciones.map((coleccion) => {
+              const nombre = coleccion.coleccion_nombre ?? coleccion.nombre;
+              const descripcion =
+                coleccion.coleccion_descripcion ?? coleccion.descripcion;
+              return (
+                <button
+                  key={nombre}
+                  type="button"
+                  className="p1-shop-nav__collection"
+                  onClick={() =>
+                    document
+                      .getElementById("p1-catalogo")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
+                  <span className="p1-shop-nav__collection-name">{nombre}</span>
+                  {descripcion && (
+                    <span className="p1-shop-nav__collection-desc">
+                      {descripcion}
+                    </span>
+                  )}
+                  <span className="p1-shop-nav__collection-action">
+                    Ver productos →
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="p1-shop-nav__empty">
+            Pronto tendremos colecciones disponibles para explorar.
+          </p>
+        )}
+
+        <div className="p1-shop-nav__trust" aria-label="Compra con confianza">
+          <div className="p1-shop-nav__trust-card">
+            <span>✓</span>
+            <p>
+              <strong>Pedido claro</strong>Elige tus productos y revísalos en tu
+              bolsa antes de finalizar.
+            </p>
+          </div>
+          <div className="p1-shop-nav__trust-card">
+            <span>◌</span>
+            <p>
+              <strong>Compra acompañada</strong>
+              {compraPorPasarela
+                ? "Finaliza de forma segura en la pasarela de pago."
+                : "Confirmamos tu pedido contigo por WhatsApp."}
+            </p>
+          </div>
+          <div className="p1-shop-nav__trust-card">
+            <span>♥</span>
+            <p>
+              <strong>Atención cercana</strong>Estamos para resolver tus dudas
+              antes de tu compra.
+            </p>
+          </div>
+        </div>
+
+        {/* Navbar superior con logo */}
+        <div className="p1-topbar">
+          <span className="p1-topbar__icon">🐾</span>
+          <span className="p1-topbar__name">Mango French</span>
+        </div>
+
+        <p className="p1-nav-cats__hint">
+          Elige una línea y luego la categoría que deseas ver
+        </p>
+
+        {/* Botones principales de línea */}
+        <div className="p1-nav-cats__main">
+          <button className="p1-cat-btn p1-cat-btn--cobijas">
+            🛏️ Cobijas ▾
+          </button>
+          <button className="p1-cat-btn p1-cat-btn--pijamas">
+            🌙 Pijamas ▾
+          </button>
+          <button className="p1-cat-btn p1-cat-btn--camisetas">
+            👕 Camisetas
+          </button>
+          <button className="p1-cat-btn p1-cat-btn--liquidaciones">
+            ⚡ Liquidaciones
+          </button>
+        </div>
+
+        {/* Pills secundarias */}
+        <div className="p1-nav-cats__secondary">
+          <button className="p1-pill">📏 Guía de tallas</button>
+          <button className="p1-pill">🔥 Lista de precios</button>
+        </div>
+      </section>
+
+      {/* ── SECCIÓN ¿CÓMO HAGO MI PEDIDO? ── */}
+      <section className="p1-how">
+        <div className="p1-order-guide">
+          <div className="p1-order-guide__heading">
+            <p className="p1-order-guide__eyebrow">Compra fácil y a tu ritmo</p>
+            <h2>¿Cómo hago mi pedido?</h2>
+            <p>
+              Arma tu bolsa con tranquilidad. Te acompañamos durante todo el
+              proceso.
+            </p>
+          </div>
+          <div className="p1-order-guide__steps">
+            <article className="p1-order-guide__step">
+              <span>1</span>
+              <div>
+                <h3>Explora nuestro catálogo</h3>
+                <p>
+                  Escoge los productos que más te gusten y añádelos a tu bolsa.
+                </p>
+              </div>
+            </article>
+            <article className="p1-order-guide__step">
+              <span>2</span>
+              <div>
+                <h3>Revisa tu carrito</h3>
+                <p>
+                  {compraPorPasarela
+                    ? "Ve a tu carrito y presiona el botón “Pagar mi carrito”."
+                    : "Ve a tu carrito, mira tus productos y presiona “Hacer pedido - WhatsApp”."}
+                </p>
+              </div>
+            </article>
+            <article className="p1-order-guide__step">
+              <span>3</span>
+              <div>
+                <h3>Confirma tu pedido</h3>
+                <p>
+                  {compraPorPasarela
+                    ? "Ingresa tu correo, presiona “Confirmar pedido” y continúa a la pasarela de pagos. Te notificaremos todo el proceso."
+                    : "Ingresa tu correo y presiona “Finalizar pedido”. Te dirigiremos a WhatsApp para procesar el pago con nosotros."}
+                </p>
+              </div>
+            </article>
+          </div>
+          <div className="p1-order-guide__tracking">
+            <div>
+              <strong>¿Ya hiciste un pedido?</strong>
+              <span>
+                Recuerda que puedes consultar su estado en cualquier momento.
+              </span>
+            </div>
+            <a onClick={() => navigate("/buscar-pedidos")}>
+              Consultar mi pedido →
+            </a>
+          </div>
+          {guiaTallasDestino && (
+            <div className="p1-order-guide__sizes">
+              <span className="p1-order-guide__sizes-icon" aria-hidden="true">
+                ↔
+              </span>
+              <div>
+                <strong>¿Tienes dudas con tu talla?</strong>
+                <span>
+                  Usa nuestra guía de medidas para encontrar una referencia más
+                  cómoda antes de hacer tu pedido.
+                </span>
+              </div>
+              <a href={guiaTallasDestino}>Ver guía de tallas →</a>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="p1-ref">
+        {promocion?.estado && productosPromoGeneral.length > 0 && (
+          <div className="p1-promotions-main">
+            <span className="p1-promotions-main__spark p1-promotions-main__spark--one">
+              ✦
+            </span>
+            <span className="p1-promotions-main__spark p1-promotions-main__spark--two">
+              ✦
+            </span>
+            <div className="p1-promotions-main__heading">
+              <p>Selección especial</p>
+              <h2>{promocion.nombre || "Promociones"}</h2>
+              <span>
+                {promocion.descripcion ||
+                  "Aprovecha estos productos seleccionados para ti."}
+              </span>
+            </div>
+            <div className="p1-promotions-main__products">
+              {productosPromoGeneral.map((producto) => {
+                const original = Number(
+                  producto.precio_original ?? producto.precio ?? 0,
+                );
+                const final = precioPromocion(producto, promocion.descuento);
+                const descuento = Number(
+                  producto.descuento ?? promocion.descuento ?? 0,
+                );
+                const mayorista = calcularPrecioMayorista(producto, descuento);
                 return (
-                  <button
-                    key={idx}
-                    className={`p1-filtro__pill ${activa ? "p1-filtro__pill--active" : ""}`}
-                    style={activa
-                      ? { background: sec + shade, color: titl, borderColor: sec + shade }
-                      : { background: "transparent", color: sec, borderColor: sec + "70" }}
-                    onClick={() => setColeccionActiva(activa ? null : col.coleccion_nombre)}
-                  >
-                    {col.coleccion_nombre}
-                    {activa && <span className="p1-filtro__pill-close">✕</span>}
-                  </button>
+                  <article key={producto.id} className="p1-promo-product">
+                    <div className="p1-promo-product__image-wrap">
+                      {producto.imagen ? (
+                        <img src={producto.imagen} alt={producto.nombre} />
+                      ) : (
+                        <span>✦</span>
+                      )}
+                      <b>{descuento > 0 ? `-${descuento}%` : "Oferta"}</b>
+                    </div>
+                    <div className="p1-promo-product__body">
+                      <h3>{producto.nombre}</h3>
+                      <span className="p1-promo-product__original">
+                        {formatearPrecio(original)}
+                      </span>
+                      <strong>{formatearPrecio(final)}</strong>
+                      <button
+                        type="button"
+                        className="p1-promo-product__detail"
+                        onClick={() => setProductoDetalle(producto)}
+                      >
+                        Ver detalle →
+                      </button>
+                    </div>
+                    {mayorista != null && (
+                      <div className="mayorista-info">
+                        <div className="mayorista-precio">
+                          <span className="mayorista-badge">MAYORISTA</span>
+
+                          <div className="mayorista-detalle">
+                            <span className="mayorista-cantidad">
+                              Desde {cantidadMinimaMayorista} uds.
+                            </span>
+
+                            <strong>{formatearPrecio(mayorista)}</strong>
+                          </div>
+                        </div>
+
+                        <div className="mayorista-ganancia">
+                          <span>Ganancia potencial</span>
+
+                          <strong>
+                            {formatearPrecio(Math.max(0, final - mayorista))}
+                          </strong>
+                        </div>
+                      </div>
+                    )}
+                  </article>
                 );
               })}
             </div>
-            <div className="p1-filtro__acciones">
-              <button
-                className="p1-filtro__accion"
-                style={{ borderColor: `${sec}50`, color: sec }}
-                onClick={() => document.getElementById("guia-tallas")?.scrollIntoView({ behavior: "smooth" })}
-              >
-                📐 Guía de tallas
-              </button>
+          </div>
+        )}
+
+        {productosPromoUnitaria.length > 0 && (
+          <div className="p1-promotions-unit">
+            <div className="p1-promotions-unit__heading">
+              <p>Ofertas seleccionadas</p>
+              <h2>Promociones unitarias</h2>
             </div>
-          </div>
-        ) : (
-          <div className="p1-sin-colecciones-msg">
-            <span className="p1-sin-colecciones-msg__emoji">🛍️</span>
-            <h3 style={{ color: titl }}>¡Todo para ti en un solo lugar!</h3>
-            <p style={{ color: `${txt}90` }}>
-              No tenemos categorías separadas, pero eso significa que puedes explorar todo nuestro catálogo sin perderte nada.
-            </p>
-            <button
-              className="p1-sin-colecciones-msg__btn"
-              style={{ background: btn, color: titl }}
-              onClick={() => document.getElementById("p1-productos")?.scrollIntoView({ behavior: "smooth" })}
-            >
-              Ver todos los productos ↓
-            </button>
-          </div>
-        )}
-
-        {/* ── PROMOCIONES ── */}
-        {(() => {
-          const promoGeneral  = tienda.productos_promo_general  ?? [];
-          const promoUnitaria = tienda.productos_promo_unitaria ?? [];
-          if (promoGeneral.length === 0 && promoUnitaria.length === 0) return null;
-          const datosPromo = tienda.datospromocion;
-          return (
-            <section className="p1-promos">
-              <span className="p1-promos__spark p1-promos__spark--1">🔥</span>
-              <span className="p1-promos__spark p1-promos__spark--2">🔥</span>
-              <span className="p1-promos__spark p1-promos__spark--3">✦</span>
-              <span className="p1-promos__spark p1-promos__spark--4">✦</span>
-
-              <div className="p1-promos__header">
-                <div className="p1-promos__fire-badge">🔥 <span>Ofertas en llamas</span> 🔥</div>
-                <h2 className="p1-promos__titulo">{datosPromo?.nombre ?? "¡Precios que queman!"}</h2>
-                {datosPromo?.descripcion && <p className="p1-promos__subtitulo">{datosPromo.descripcion}</p>}
-                <div className="p1-promos__flame-bar" />
-              </div>
-
-              {promoGeneral.length > 0 && (
-                <div className="p1-promos__grupo">
-                  {datosPromo?.descuento > 0 && (
-                    <div className="p1-promos__grupo-label">
-                      <div className="p1-promos__pct-pill">
-                        <span className="p1-promos__pct-num">-{datosPromo.descuento}%</span>
-                        <span className="p1-promos__pct-label">en todos estos productos</span>
-                      </div>
-                    </div>
-                  )}
-                  <div className="p1-products-grid">
-                    {promoGeneral.map((p) => (
-                      <ProductCard key={p.id} producto={{ ...p, precio: p.precio_original, descuento: p.descuento }} estilos={estilos} abrirmodal={abrirmodal} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {promoUnitaria.length > 0 && (
-                <div className="p1-promos__grupo">
-                  {promoGeneral.length > 0 && (
-                    <div className="p1-promos__sep-fuego">
-                      <span>🔥</span><div className="p1-promos__sep-line" /><span>🔥</span>
-                    </div>
-                  )}
-                  <div className="p1-promos__grupo-label">
-                    <div className="p1-promos__excl-pill">✦ Descuentos exclusivos</div>
-                  </div>
-                  <div className="p1-products-grid">
-                    {promoUnitaria.map((p) => (
-                      <ProductCard key={p.id} producto={{ ...p, precio: p.precio_original, descuento: p.descuento }} estilos={estilos} abrirmodal={abrirmodal} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </section>
-          );
-        })()}
-
-        {/* ── COLECCIONES ── */}
-        {hayColecciones &&
-          tienda.colecciones
-            .filter((col) => coleccionActiva === null || col.coleccion_nombre === coleccionActiva)
-            .map((col, idx) => (
-              <div key={idx} className="p1-coleccion-bloque">
-                {coleccionActiva === null && (
-                  <>
-                    <h2 className="p1-coleccion__titulo" style={{ color: titl, fontWeight: 800 }}>{col.coleccion_nombre}</h2>
-                    {col.coleccion_descripcion && (
-                      <p className="p1-coleccion__desc" style={{ color: txt + "80" }}>{col.coleccion_descripcion}</p>
+            <div className="p1-promotions-unit__products">
+              {productosPromoUnitaria.map((producto) => {
+                const original = Number(
+                  producto.precio_original ?? producto.precio ?? 0,
+                );
+                const final = precioPromocion(producto);
+                const descuento = Number(producto.descuento ?? 0);
+                const mayorista = calcularPrecioMayorista(producto, descuento);
+                return (
+                  <article key={producto.id} className="p1-unit-product">
+                    {producto.imagen ? (
+                      <img src={producto.imagen} alt={producto.nombre} />
+                    ) : (
+                      <span>✦</span>
                     )}
-                  </>
-                )}
-                {coleccionActiva !== null && col.coleccion_descripcion && (
-                  <p className="p1-coleccion__desc" style={{ color: txt + "80" }}>{col.coleccion_descripcion}</p>
-                )}
-                {col.productos?.length > 0 ? (
-                  <div className="p1-products-grid">
-                    {col.productos.map((p) => (
-                      <ProductCard key={p.id} producto={p} estilos={estilos} abrirmodal={abrirmodal} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="p1-coleccion__vacia" style={{ color: `${txt}60` }}>
-                    Esta colección aún no tiene productos disponibles.
-                  </p>
-                )}
-                {coleccionActiva === null && idx < tienda.colecciones.length - 1 && (
-                  <div className="p1-coleccion__divider" style={{ background: `${sec}30` }} />
-                )}
-              </div>
-            ))}
+                    <div className="p1-unit-product__content">
+                      <h3>{producto.nombre}</h3>
+                      <span>{formatearPrecio(original)}</span>
+                      <strong>{formatearPrecio(final)}</strong>
+                      <button
+                        type="button"
+                        className="p1-unit-product__detail"
+                        onClick={() => setProductoDetalle(producto)}
+                      >
+                        Ver detalle →
+                      </button>
+                    </div>
+                    {mayorista != null && (
+                      <div className="mayorista-info">
+                        <div className="mayorista-precio">
+                          <span className="mayorista-badge">MAYORISTA</span>
 
-        {/* Trigger lazy load */}
-        <div ref={triggerRef} id="p1-productos" />
+                          <div className="mayorista-detalle">
+                            <span className="mayorista-cantidad">
+                              Desde {cantidadMinimaMayorista} uds.
+                            </span>
 
-        {/* ── PRODUCTOS SUELTOS ── */}
-        {(cargandoSueltos || productosSueltos.length > 0) && coleccionActiva === null && (
-          <div className="p1-coleccion-bloque">
-            <h2 className="p1-coleccion__titulo" style={{ color: titl, fontWeight: 800 }}>
-              {hayColecciones ? "También te puede interesar" : "Nuestros productos"}
-            </h2>
-            <p className="p1-coleccion__desc" style={{ color: txt + "80" }}>
-              {hayColecciones ? "Más cosas que podrían encantarte" : "Explora todo lo que tenemos para ti"}
-            </p>
-            {cargandoSueltos ? (
-              <div className="p1-loading">
-                <div className="p1-spinner" style={{ borderTopColor: btn }} />
-                <p style={{ color: `${txt}80` }}>Cargando productos…</p>
-              </div>
-            ) : (
-              <div className="p1-products-grid">
-                {productosSueltos.map((p) => (
-                  <ProductCard key={p.id} producto={p} estilos={estilos} abrirmodal={abrirmodal} />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                            <strong>{formatearPrecio(mayorista)}</strong>
+                          </div>
+                        </div>
 
-        {!hayColecciones && !cargandoSueltos && productosSueltos.length === 0 && sueltosCargados && (
-          <div className="con-plantilla1__sin-colecciones">
-            <p style={{ color: titl }}>🎉 Pronto tendremos productos disponibles para ti.</p>
+                        <div className="mayorista-ganancia">
+                          <span>Ganancia potencial</span>
+
+                          <strong>
+                            {formatearPrecio(Math.max(0, final - mayorista))}
+                          </strong>
+                        </div>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
           </div>
         )}
       </section>
 
-      {/* ── MODAL PEDIDO ── */}
-      {modalOpen && (
-        <Dudaspedido setModalOpen={setModalOpen} estilos={estilos} pasarela={tienda.pasarela_pagos} />
-      )}
+      {/* ── SECCIÓN COLECCIONES ── */}
+      <section className="p1-catalog" id="p1-catalogo">
+        {colecciones.map((coleccion, indiceColeccion) => {
+          const nombre =
+            coleccion.coleccion_nombre ?? coleccion.nombre ?? "Colección";
+          const descripcion =
+            coleccion.coleccion_descripcion ?? coleccion.descripcion;
+          const productos = coleccion.productos ?? [];
 
-      {/* ── MODAL PRODUCTO ── */}
-      {modal && productoseleccionado && (
-        <ModalProducto estilos={estilos} setmodal={setmodal} producto={productoseleccionado} />
-      )}
+          return (
+            <div
+              className="p1-collection"
+              key={coleccion.id ?? `${nombre}-${indiceColeccion}`}
+            >
+              <div className="p1-collection__header">
+                <div>
+                  <h2 className="p1-collection__title">{nombre}</h2>
+                  {descripcion && (
+                    <p className="p1-collection__description">{descripcion}</p>
+                  )}
+                </div>
+                <span className="p1-collection__count">
+                  {productos.length}{" "}
+                  {productos.length === 1 ? "producto" : "productos"}
+                </span>
+              </div>
 
-      {/* ── GUÍA DE TALLAS ── */}
-      <SeccionTallas estilos={estilos} />
+              {productos.length > 0 ? (
+                <div className="p1-products-grid">
+                  {productos.map(renderProducto)}
+                </div>
+              ) : (
+                <p className="p1-collection__empty">
+                  Esta colección aún no tiene productos.
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </section>
 
-      {/* ── FOOTER ── */}
-      <FooterP1 tienda={tienda} estilos={estilos} />
-
-      {/* ── CARRITO FLOTANTE ── */}
-      <div className="p1-cart-fab-wrap">
-        {bolsaOpen && (
-          <CarritoPanel
-            estilos={estilos}
-            items={itemsBolsa}
-            onClose={(nueva) => { if (nueva !== null) setItemsBolsa(nueva); setBolsaOpen(false); }}
-            onAbrirModal={() => { setBolsaOpen(false); setCarritoModal(true); }}
-          />
-        )}
-        <button
-          className="p1-cart-fab"
-          style={{ background: `linear-gradient(135deg, ${btn}, ${sec})`, boxShadow: `0 6px 24px ${btn}66`, color: titl }}
-          onClick={() => {
-            const datos = JSON.parse(localStorage.getItem("bolsa") ?? "[]");
-            setItemsBolsa(datos);
-            setBolsaOpen((v) => !v);
-          }}
+      {(cargandoProductosDominio || productosParaAntojarse.length > 0) && (
+        <section
+          className="p1-more-products"
+          aria-labelledby="p1-more-products-title"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" width="24" height="24">
-            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <path d="M16 10a4 4 0 01-8 0" />
-          </svg>
-          {itemsBolsa.length > 0 && (
-            <span className="p1-cart-fab__badge" style={{ background: bg, color: btn }}>
-              {itemsBolsa.reduce((a, i) => a + (i.cantidad ?? 1), 0)}
+          <div className="p1-more-products__heading">
+            <p>Una última mirada</p>
+            <h2 id="p1-more-products-title">Antójate de algo más</h2>
+            <span>
+              Descubre esas piezas que pueden ser justo lo que te faltaba. Date
+              un gusto y encuentra tu próximo favorito.
             </span>
+          </div>
+          {cargandoProductosDominio ? (
+            <p className="p1-more-products__loading">
+              Cargando más productos...
+            </p>
+          ) : (
+            <div className="p1-products-grid">
+              {productosParaAntojarse.map(renderProducto)}
+            </div>
           )}
-        </button>
-      </div>
+        </section>
+      )}
 
-      {/* ── MODAL CARRITO ── */}
-      {carritoModal && (
+      {listadeactividades.includes(actividadtienda) ? (
+        <GestionTallas actividad={actividadtienda} estilos={estilos} />
+      ) : (
+        <></>
+      )}
+
+      {productoDetalle && (
+        <div
+          className="p1-product-modal__overlay"
+          role="presentation"
+          onMouseDown={() => setProductoDetalle(null)}
+        >
+          <section
+            className="p1-product-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="p1-product-modal-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="p1-product-modal__close"
+              onClick={() => setProductoDetalle(null)}
+              aria-label="Cerrar detalle del producto"
+            >
+              ×
+            </button>
+            <div className="p1-product-modal__image-wrap">
+              {imagenDetalle ? (
+                <img src={imagenDetalle} alt={productoDetalle.nombre} />
+              ) : (
+                <span>Sin imagen</span>
+              )}
+            </div>
+            <div className="p1-product-modal__content">
+              <span className="p1-product-modal__ref">
+                {productoDetalle.referencia ??
+                  productoDetalle.codigo ??
+                  `Ref. ${productoDetalle.id}`}
+              </span>
+              <h2 id="p1-product-modal-title">{productoDetalle.nombre}</h2>
+              {productoDetalle.descripcion && (
+                <p>{productoDetalle.descripcion}</p>
+              )}
+              <div className="p1-product-modal__price">
+                {descuentoDetalle > 0 && (
+                  <del>{formatearPrecio(precioDetalleOriginal)}</del>
+                )}
+                <strong>{formatearPrecio(precioUnitarioDetalle)}</strong>
+                {aplicaMayoristaDetalle && <b>Precio mayorista aplicado</b>}
+                {descuentoDetalle > 0 && <b>-{descuentoDetalle}% OFF</b>}
+              </div>
+              {precioDetalleMayorista != null && (
+                <div className="p1-product-modal__wholesale-card">
+                  <div className="p1-product-modal__wholesale-header">
+                    <div className="p1-product-modal__wholesale-icon">🏷️</div>
+
+                    <div>
+                      <span className="p1-product-modal__wholesale-title">
+                        Precio mayorista
+                      </span>
+
+                      <span className="p1-product-modal__wholesale-min">
+                        Desde {cantidadMinimaMayorista} unidades
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p1-product-modal__wholesale-main">
+                    <span className="p1-product-modal__wholesale-label">
+                      Precio al por mayor
+                    </span>
+
+                    <strong className="p1-product-modal__wholesale-value">
+                      {formatearPrecio(precioDetalleMayorista)}
+                    </strong>
+                  </div>
+
+                  <div className="p1-product-modal__wholesale-profit">
+                    <span>Ganancia potencial</span>
+
+                    <strong>
+                      {formatearPrecio(gananciaDetalle)} <small>c/u</small>
+                    </strong>
+                  </div>
+                </div>
+              )}
+
+              {productoDetalle && puedeAgregarDetalle && (
+                <div className="p1-product-modal__quantity">
+                  <div className="p1-product-modal__quantity-header">
+                    <span>Cantidad</span>
+
+                    <span className="p1-product-modal__quantity-stock">
+                      {cantidadDisponibleDetalle} disponibles
+                    </span>
+                  </div>
+
+                  <div className="p1-product-modal__quantity-controls">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCantidadDetalle((cantidad) =>
+                          Math.max(1, cantidad - 1),
+                        )
+                      }
+                      disabled={cantidadDetalle <= 1}
+                      aria-label="Reducir cantidad"
+                      className="p1-product-modal__quantity-btn"
+                    >
+                      −
+                    </button>
+
+                    <strong
+                      aria-live="polite"
+                      className="p1-product-modal__quantity-value"
+                    >
+                      {cantidadDetalle}
+                    </strong>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCantidadDetalle((cantidad) =>
+                          Math.min(cantidadDisponibleDetalle, cantidad + 1),
+                        )
+                      }
+                      disabled={cantidadDetalle >= cantidadDisponibleDetalle}
+                      aria-label="Aumentar cantidad"
+                      className="p1-product-modal__quantity-btn"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <div className="p1-product-modal__quantity-total">
+                    <span>Total</span>
+
+                    <strong>{formatearPrecio(totalDetalle)}</strong>
+
+                    {aplicaMayoristaDetalle && (
+                      <span className="p1-product-modal__wholesale-tag">
+                        Precio mayorista
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {cargandoDetalle && (
+                <p className="p1-product-modal__status">
+                  Cargando opciones disponibles...
+                </p>
+              )}
+              {!cargandoDetalle && errorDetalle && (
+                <p className="p1-product-modal__status p1-product-modal__status--error">
+                  No pudimos cargar las opciones. Inténtalo de nuevo.
+                </p>
+              )}
+              {!cargandoDetalle &&
+                !errorDetalle &&
+                variantesDetalle.length > 0 && (
+                  <div className="p1-product-modal__variants">
+                    {productoDetalle.tipo === "variantes" ? (
+                      <>
+                        <span>Elige un color</span>
+                        <div className="p1-product-modal__options">
+                          {variantesDetalle.map((variante) => (
+                            <button
+                              key={variante.id}
+                              type="button"
+                              className={
+                                varianteDetalle?.id === variante.id
+                                  ? "is-selected"
+                                  : ""
+                              }
+                              onClick={() => {
+                                setVarianteDetalle(variante);
+                                setTallaDetalle(null);
+                              }}
+                            >
+                              {variante.color || "Opción"}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    ) : null}
+                    {varianteDetalle?.tallas?.length > 0 && (
+                      <>
+                        <span>Disponibilidad por talla</span>
+                        <div className="p1-product-modal__sizes">
+                          {varianteDetalle.tallas.map((talla) => (
+                            <button
+                              key={talla.id}
+                              type="button"
+                              disabled={talla.cantidad <= 0}
+                              className={`${tallaDetalle?.id === talla.id ? "is-selected" : ""} ${talla.cantidad > 0 ? "" : "is-sold-out"}`}
+                              onClick={() => {
+                                setTallaDetalle(talla);
+                                setCantidadDetalle(1);
+                              }}
+                            >
+                              {talla.talla}{" "}
+                              <small>
+                                {talla.cantidad > 0
+                                  ? `${talla.cantidad} disponibles`
+                                  : "Agotada"}
+                              </small>
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              {!cargandoDetalle &&
+                !errorDetalle &&
+                variantesDetalle.length === 0 && (
+                  <p className="p1-product-modal__status">
+                    Este producto no tiene opciones adicionales.
+                  </p>
+                )}
+              <button
+                type="button"
+                className="p1-product-modal__add"
+                disabled={cargandoDetalle || !puedeAgregarDetalle}
+                onClick={agregarDetalleABolsa}
+              >
+                {productoDetalle.tipo === "simple" || tallaDetalle
+                  ? "Agregar a la bolsa"
+                  : "Selecciona una talla para agregar"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      <footer className="p1-footer">
+        <strong>{tienda.nombre || "Tu tienda"}</strong>
+        <span>Desarrollado por NWBIQ</span>
+        <small>
+          © {new Date().getFullYear()} NWBIQSHOP. Todos los derechos reservados.
+        </small>
+      </footer>
+
+      {/* Navbar inferior fijo */}
+      <nav className="p1-nav-bottom">
+        <span className="p1-nav-bottom__icon" aria-hidden="true">
+          ✦
+        </span>
+        <span className="p1-nav-bottom__name">
+          {tienda.nombre || "Tu tienda"}
+        </span>
+        <div className="p1-nav-bottom__actions">
+          <button
+            type="button"
+            className="p1-nav-bottom__bag"
+            onClick={() => setBolsaAbierta(true)}
+            aria-label="Abrir bolsa de compras"
+          >
+            <span aria-hidden="true">🛍️</span>
+            {cantidadBolsa > 0 && <b>{cantidadBolsa}</b>}
+          </button>
+          <button
+            type="button"
+            className="p1-nav-bottom__top"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            aria-label="Volver al inicio"
+          >
+            ↑
+          </button>
+        </div>
+      </nav>
+
+      {bolsaAbierta && (
         <CarritoModal
           estilos={estilos}
-          pasarela={tienda.pasarela_pagos}
+          pasarela={compraPorPasarela}
           items={itemsBolsa}
+          estadoAlPorMayor={estadoAlPorMayor}
+          cantidadMinimaMayorista={cantidadMinimaMayorista}
           dominio={dominio}
           telefono={tienda.telefono}
           nombreTienda={tienda.nombre}
-          onClose={() => setCarritoModal(false)}
-          onActualizar={(nueva) => setItemsBolsa(nueva)}
+          onClose={() => setBolsaAbierta(false)}
+          onActualizar={setItemsBolsa}
         />
       )}
     </div>
   );
 }
-
-export default Plantilla1;

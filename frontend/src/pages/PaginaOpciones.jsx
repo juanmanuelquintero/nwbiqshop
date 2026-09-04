@@ -9,7 +9,11 @@ import {
   ModificarUsuario,
   ModificarTienda,
   CambiarContrasena,
+  TraerAlPorMayor,
+  ActualizarAlPorMayor,
+  CambiarEstadoAlPorMayor,
 } from "../api/axios";
+import ModalInformacionInputs from "../components/InformacionInputs";
 import "../styles/opciones.css";
 
 const VERSION = "1.0.0";
@@ -18,6 +22,19 @@ const CONTACTO = {
   whatsapp: "+57 300 000 0000",
   web: "https://nwbiqshop.com",
 };
+
+function InfoTrigger({ onClick }) {
+  return (
+    <button
+      type="button"
+      className="op-info-trigger"
+      onClick={onClick}
+      aria-label="Ver información"
+    >
+      !
+    </button>
+  );
+}
 
 /* ══════════════════════════════════════════
    Sección colapsable
@@ -44,15 +61,16 @@ function SeccionCard({ icon, title, badge, children, defaultOpen = false }) {
 ══════════════════════════════════════════ */
 function FormUsuario({ usuario, cedula, onGuardado }) {
   const [form, setForm] = useState({
-    nombres:         usuario?.nombres       ?? "",
-    apellidos:       usuario?.apellidos     ?? "",
-    ciudad:          usuario?.ciudad        ?? "",
-    direccion:       usuario?.direccion     ?? "",
-    correo:          usuario?.correo        ?? "",
-    telefono:        usuario?.telefono      ?? "",
+    nombres: usuario?.nombres ?? "",
+    apellidos: usuario?.apellidos ?? "",
+    ciudad: usuario?.ciudad ?? "",
+    direccion: usuario?.direccion ?? "",
+    correo: usuario?.correo ?? "",
+    telefono: usuario?.telefono ?? "",
     fecha_nacimieno: usuario?.fecha_nacimieno ?? "",
   });
   const [saving, setSaving] = useState(false);
+  const [info, setInfo] = useState(null);
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -64,7 +82,10 @@ function FormUsuario({ usuario, cedula, onGuardado }) {
       mostrarAlerta("success", "Datos actualizados correctamente");
       onGuardado();
     } catch (err) {
-      mostrarAlerta("error", err?.response?.data?.detail ?? "Error al actualizar");
+      mostrarAlerta(
+        "error",
+        err?.response?.data?.detail ?? "Error al actualizar",
+      );
     } finally {
       setSaving(false);
     }
@@ -75,36 +96,79 @@ function FormUsuario({ usuario, cedula, onGuardado }) {
       <div className="op-form__grid">
         <div className="op-field">
           <label>Nombres</label>
-          <input value={form.nombres} onChange={(e) => set("nombres", e.target.value)} placeholder="Juan Esteban" />
+          <input
+            value={form.nombres}
+            onChange={(e) => set("nombres", e.target.value)}
+            placeholder="Juan Esteban"
+          />
         </div>
         <div className="op-field">
           <label>Apellidos</label>
-          <input value={form.apellidos} onChange={(e) => set("apellidos", e.target.value)} placeholder="García Pérez" />
+          <input
+            value={form.apellidos}
+            onChange={(e) => set("apellidos", e.target.value)}
+            placeholder="García Pérez"
+          />
         </div>
         <div className="op-field">
-          <label>Correo</label>
-          <input type="email" value={form.correo} onChange={(e) => set("correo", e.target.value)} placeholder="correo@ejemplo.com" />
+          <label>
+            Correo
+            <InfoTrigger
+              onClick={() =>
+                setInfo(
+                  "Mantén actualizado tu correo porque puede utilizarse para comunicaciones importantes de tu cuenta.",
+                )
+              }
+            />
+          </label>
+          <input
+            type="email"
+            value={form.correo}
+            onChange={(e) => set("correo", e.target.value)}
+            placeholder="correo@ejemplo.com"
+          />
         </div>
         <div className="op-field">
           <label>Teléfono</label>
-          <input value={form.telefono} onChange={(e) => set("telefono", e.target.value)} placeholder="3001234567" />
+          <input
+            value={form.telefono}
+            onChange={(e) => set("telefono", e.target.value)}
+            placeholder="3001234567"
+          />
         </div>
         <div className="op-field">
           <label>Ciudad</label>
-          <input value={form.ciudad} onChange={(e) => set("ciudad", e.target.value)} placeholder="Armenia" />
+          <input
+            value={form.ciudad}
+            onChange={(e) => set("ciudad", e.target.value)}
+            placeholder="Armenia"
+          />
         </div>
         <div className="op-field">
           <label>Dirección</label>
-          <input value={form.direccion} onChange={(e) => set("direccion", e.target.value)} placeholder="Calle 21 #17-9" />
+          <input
+            value={form.direccion}
+            onChange={(e) => set("direccion", e.target.value)}
+            placeholder="Calle 21 #17-9"
+          />
         </div>
         <div className="op-field">
           <label>Fecha de nacimiento</label>
-          <input type="date" value={form.fecha_nacimieno} onChange={(e) => set("fecha_nacimieno", e.target.value)} />
+          <input
+            type="date"
+            value={form.fecha_nacimieno}
+            onChange={(e) => set("fecha_nacimieno", e.target.value)}
+          />
         </div>
       </div>
-      <button type="submit" className="op-btn op-btn--primary" disabled={saving}>
+      <button
+        type="submit"
+        className="op-btn op-btn--primary"
+        disabled={saving}
+      >
         {saving ? "Guardando…" : "Guardar cambios ✓"}
       </button>
+      {info && <ModalInformacionInputs text={info} setmodal={setInfo} />}
     </form>
   );
 }
@@ -113,18 +177,20 @@ function FormUsuario({ usuario, cedula, onGuardado }) {
    Formulario cambiar contraseña
 ══════════════════════════════════════════ */
 function FormContrasena({ cedula }) {
-  const [actual, setActual]   = useState("");
-  const [nueva, setNueva]     = useState("");
-  const [repite, setRepite]   = useState("");
-  const [saving, setSaving]   = useState(false);
+  const [actual, setActual] = useState("");
+  const [nueva, setNueva] = useState("");
+  const [repite, setRepite] = useState("");
+  const [saving, setSaving] = useState(false);
   const [showActual, setShowActual] = useState(false);
-  const [showNueva,  setShowNueva]  = useState(false);
+  const [showNueva, setShowNueva] = useState(false);
+  const [info, setInfo] = useState(null);
 
   const fortaleza = (() => {
     if (nueva.length === 0) return null;
-    if (nueva.length < 6)   return { label: "Débil",   cls: "op-strength--weak" };
-    if (nueva.length < 10)  return { label: "Media",   cls: "op-strength--medium" };
-    return                         { label: "Fuerte",  cls: "op-strength--strong" };
+    if (nueva.length < 6) return { label: "Débil", cls: "op-strength--weak" };
+    if (nueva.length < 10)
+      return { label: "Media", cls: "op-strength--medium" };
+    return { label: "Fuerte", cls: "op-strength--strong" };
   })();
 
   const handleSubmit = async (e) => {
@@ -134,16 +200,28 @@ function FormContrasena({ cedula }) {
       return;
     }
     if (nueva.length < 8 || nueva.length > 15) {
-      mostrarAlerta("error", "La contraseña debe tener entre 8 y 15 caracteres");
+      mostrarAlerta(
+        "error",
+        "La contraseña debe tener entre 8 y 15 caracteres",
+      );
       return;
     }
     setSaving(true);
     try {
-      await CambiarContrasena({ id_usuario: cedula, contraseña: actual, contraseñanueva: nueva });
+      await CambiarContrasena({
+        id_usuario: cedula,
+        contraseña: actual,
+        contraseñanueva: nueva,
+      });
       mostrarAlerta("success", "Contraseña actualizada correctamente");
-      setActual(""); setNueva(""); setRepite("");
+      setActual("");
+      setNueva("");
+      setRepite("");
     } catch (err) {
-      mostrarAlerta("error", err?.response?.data?.detail ?? "Error al cambiar la contraseña");
+      mostrarAlerta(
+        "error",
+        err?.response?.data?.detail ?? "Error al cambiar la contraseña",
+      );
     } finally {
       setSaving(false);
     }
@@ -153,7 +231,16 @@ function FormContrasena({ cedula }) {
     <form className="op-form" onSubmit={handleSubmit}>
       <div className="op-form__grid op-form__grid--single">
         <div className="op-field">
-          <label>Contraseña actual</label>
+          <label>
+            Contraseña actual
+            <InfoTrigger
+              onClick={() =>
+                setInfo(
+                  "Escribe tu contraseña actual para confirmar que eres el propietario de la cuenta.",
+                )
+              }
+            />
+          </label>
           <div className="op-input-eye">
             <input
               type={showActual ? "text" : "password"}
@@ -162,13 +249,26 @@ function FormContrasena({ cedula }) {
               placeholder="••••••••"
               required
             />
-            <button type="button" className="op-eye-btn" onClick={() => setShowActual((v) => !v)}>
+            <button
+              type="button"
+              className="op-eye-btn"
+              onClick={() => setShowActual((v) => !v)}
+            >
               {showActual ? "🙈" : "👁️"}
             </button>
           </div>
         </div>
         <div className="op-field">
-          <label>Nueva contraseña <span className="op-hint">(8–15 caracteres)</span></label>
+          <label>
+            Nueva contraseña <span className="op-hint">(8–15 caracteres)</span>
+            <InfoTrigger
+              onClick={() =>
+                setInfo(
+                  "La nueva contraseña debe tener entre 8 y 15 caracteres. Evita usar datos fáciles de adivinar.",
+                )
+              }
+            />
+          </label>
           <div className="op-input-eye">
             <input
               type={showNueva ? "text" : "password"}
@@ -177,7 +277,11 @@ function FormContrasena({ cedula }) {
               placeholder="••••••••"
               required
             />
-            <button type="button" className="op-eye-btn" onClick={() => setShowNueva((v) => !v)}>
+            <button
+              type="button"
+              className="op-eye-btn"
+              onClick={() => setShowNueva((v) => !v)}
+            >
               {showNueva ? "🙈" : "👁️"}
             </button>
           </div>
@@ -198,13 +302,20 @@ function FormContrasena({ cedula }) {
             required
           />
           {repite && nueva !== repite && (
-            <span className="op-field__error">Las contraseñas no coinciden</span>
+            <span className="op-field__error">
+              Las contraseñas no coinciden
+            </span>
           )}
         </div>
       </div>
-      <button type="submit" className="op-btn op-btn--primary" disabled={saving || nueva !== repite}>
+      <button
+        type="submit"
+        className="op-btn op-btn--primary"
+        disabled={saving || nueva !== repite}
+      >
         {saving ? "Actualizando…" : "Cambiar contraseña 🔒"}
       </button>
+      {info && <ModalInformacionInputs text={info} setmodal={setInfo} />}
     </form>
   );
 }
@@ -214,16 +325,16 @@ function FormContrasena({ cedula }) {
 ══════════════════════════════════════════ */
 function FormTienda({ tienda, cedula, onGuardado }) {
   const [form, setForm] = useState({
-    nombre:          tienda?.nombre          ?? "",
-    dominio:         tienda?.dominio         ?? "",
-    descripcion:     tienda?.descripcion     ?? "",
-    sueldo_mensual:  tienda?.sueldo_mensual  ?? "",
-    actividad:       tienda?.actividad       ?? "",
-    direccion:       tienda?.direccion       ?? "",
-    telefono:        tienda?.telefono        ?? "",
-    pasarela_pagos:  tienda?.pasarela_pagos  ?? false,
+    nombre: tienda?.nombre ?? "",
+    dominio: tienda?.dominio ?? "",
+    descripcion: tienda?.descripcion ?? "",
+    direccion: tienda?.direccion ?? "",
+    telefono: tienda?.telefono ?? "",
+    pasarela_pagos: tienda?.pasarela_pagos ?? false,
   });
   const [saving, setSaving] = useState(false);
+  const [confirmarPasarela, setConfirmarPasarela] = useState(false);
+  const [info, setInfo] = useState(null);
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -235,7 +346,10 @@ function FormTienda({ tienda, cedula, onGuardado }) {
       mostrarAlerta("success", "Tienda actualizada correctamente");
       onGuardado();
     } catch (err) {
-      mostrarAlerta("error", err?.response?.data?.detail ?? "Error al actualizar la tienda");
+      mostrarAlerta(
+        "error",
+        err?.response?.data?.detail ?? "Error al actualizar la tienda",
+      );
     } finally {
       setSaving(false);
     }
@@ -245,80 +359,310 @@ function FormTienda({ tienda, cedula, onGuardado }) {
     <form className="op-form" onSubmit={handleSubmit}>
       <div className="op-form__grid">
         <div className="op-field">
-          <label>Nombre de la tienda</label>
-          <input value={form.nombre} onChange={(e) => set("nombre", e.target.value)} placeholder="Mi Tienda Online" />
+          <label>
+            Nombre de la tienda
+            <InfoTrigger
+              onClick={() =>
+                setInfo(
+                  "Este nombre identifica tu negocio en la tienda pública y puede cambiarse cuando lo necesites.",
+                )
+              }
+            />
+          </label>
+          <input
+            value={form.nombre}
+            onChange={(e) => set("nombre", e.target.value)}
+            placeholder="Mi Tienda Online"
+          />
         </div>
         <div className="op-field">
-          <label>Dominio <span className="op-hint">(URL pública)</span></label>
+          <label>
+            Dominio <span className="op-hint">(URL pública)</span>
+            <InfoTrigger
+              onClick={() =>
+                setInfo(
+                  "El dominio forma parte de la dirección pública de tu tienda. No uses espacios y recuerda que debe ser único.",
+                )
+              }
+            />
+          </label>
           <div className="op-input-prefix">
             <span>@</span>
-            <input value={form.dominio} onChange={(e) => set("dominio", e.target.value)} placeholder="mi-tienda" />
+            <input
+              value={form.dominio}
+              onChange={(e) => set("dominio", e.target.value)}
+              placeholder="mi-tienda"
+            />
           </div>
         </div>
         <div className="op-field op-field--full">
-          <label>Descripción</label>
-          <textarea rows={3} value={form.descripcion} onChange={(e) => set("descripcion", e.target.value)} placeholder="Cuéntanos sobre tu tienda…" />
-        </div>
-        <div className="op-field">
-          <label>Actividad comercial</label>
-          <input value={form.actividad} onChange={(e) => set("actividad", e.target.value)} placeholder="Moda, accesorios…" />
-        </div>
-        <div className="op-field">
-          <label>Ingreso mensual aprox.</label>
-          <input value={form.sueldo_mensual} onChange={(e) => set("sueldo_mensual", e.target.value)} placeholder="$2.000.000" />
+          <label>
+            Descripción
+            <InfoTrigger
+              onClick={() =>
+                setInfo(
+                  "Escribe una breve presentación de tu negocio para que tus visitantes conozcan qué ofreces.",
+                )
+              }
+            />
+          </label>
+          <textarea
+            rows={3}
+            value={form.descripcion}
+            onChange={(e) => set("descripcion", e.target.value)}
+            placeholder="Cuéntanos sobre tu tienda…"
+          />
         </div>
         <div className="op-field">
           <label>Dirección física</label>
-          <input value={form.direccion} onChange={(e) => set("direccion", e.target.value)} placeholder="Calle 21 #17-9" />
+          <input
+            value={form.direccion}
+            onChange={(e) => set("direccion", e.target.value)}
+            placeholder="Calle 21 #17-9"
+          />
         </div>
         <div className="op-field">
           <label>Teléfono de contacto</label>
-          <input value={form.telefono} onChange={(e) => set("telefono", e.target.value)} placeholder="3001234567" />
+          <input
+            value={form.telefono}
+            onChange={(e) => set("telefono", e.target.value)}
+            placeholder="3001234567"
+          />
         </div>
         <div className="op-field">
           <label className="op-toggle-label">
             <span>Pasarela de pagos</span>
+            <InfoTrigger
+              onClick={() =>
+                setInfo(
+                  "La pasarela permite recibir pagos en línea mediante Wompi. El cambio requiere confirmación y aplica un cobro del 5% por venta.",
+                )
+              }
+            />
             <button
               type="button"
               className={`op-toggle ${form.pasarela_pagos ? "op-toggle--on" : ""}`}
-              onClick={() => set("pasarela_pagos", !form.pasarela_pagos)}
+              onClick={() => setConfirmarPasarela(true)}
               role="switch"
               aria-checked={form.pasarela_pagos}
+              aria-label="Cambiar pasarela de pagos"
             >
               <span className="op-toggle__thumb" />
             </button>
-            <span className={`op-toggle-status ${form.pasarela_pagos ? "op-toggle-status--on" : ""}`}>
+            <span
+              className={`op-toggle-status ${form.pasarela_pagos ? "op-toggle-status--on" : ""}`}
+            >
               {form.pasarela_pagos ? "Activa" : "Inactiva"}
             </span>
           </label>
         </div>
       </div>
-      <button type="submit" className="op-btn op-btn--primary" disabled={saving}>
+      <button
+        type="submit"
+        className="op-btn op-btn--primary"
+        disabled={saving}
+      >
         {saving ? "Guardando…" : "Guardar cambios ✓"}
       </button>
+
+      {confirmarPasarela && (
+        <div className="op-confirm-overlay" role="presentation">
+          <div
+            className="op-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="op-confirm-title"
+          >
+            <div className="op-confirm-modal__icon">💳</div>
+            <h2 id="op-confirm-title">¿Estás seguro?</h2>
+            <p>
+              ¿Estás seguro de cambiar tus ventas de WhatsApp a pagos en línea?
+            </p>
+            <p>
+              La pasarela que utilizaremos es <strong>Wompi</strong> y se
+              cobrará el <strong>5% de cada venta</strong>.
+            </p>
+            <div className="op-confirm-modal__actions">
+              <button
+                type="button"
+                className="op-btn op-btn--secondary"
+                onClick={() => setConfirmarPasarela(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="op-btn op-btn--primary"
+                onClick={() => {
+                  set("pasarela_pagos", !form.pasarela_pagos);
+                  setConfirmarPasarela(false);
+                }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {info && <ModalInformacionInputs text={info} setmodal={setInfo} />}
     </form>
   );
 }
 
 /* ══════════════════════════════════════════
+   Formulario Al por mayor
+══════════════════════════════════════════ */
+function FormAlPorMayor({ alpormayor, cedula, onActualizado }) {
+  const [cantMin, setCantMin] = useState(alpormayor?.cantidad_minima ?? "");
+  const [loadingCant, setLoadingCant] = useState(false);
+  const [loadingEst, setLoadingEst] = useState(false);
+  const [info, setInfo] = useState(null);
+
+  const handleGuardarCantidad = async (e) => {
+    e.preventDefault();
+    if (!cantMin || Number(cantMin) < 1) {
+      mostrarAlerta("error", "La cantidad mínima debe ser mayor a 0");
+      return;
+    }
+    setLoadingCant(true);
+    try {
+      await ActualizarAlPorMayor({
+        id_usuario: cedula,
+        cantidad_minima: Number(cantMin),
+      });
+      mostrarAlerta("success", "Cantidad mínima actualizada");
+      onActualizado();
+    } catch (err) {
+      mostrarAlerta(
+        "error",
+        err?.response?.data?.detail ?? "Error al actualizar",
+      );
+    } finally {
+      setLoadingCant(false);
+    }
+  };
+
+  const handleCambiarEstado = async () => {
+    setLoadingEst(true);
+    try {
+      await CambiarEstadoAlPorMayor(cedula);
+      mostrarAlerta(
+        "success",
+        alpormayor?.estado
+          ? "Venta al por mayor deshabilitada"
+          : "Venta al por mayor habilitada",
+      );
+      onActualizado();
+    } catch (err) {
+      mostrarAlerta(
+        "error",
+        err?.response?.data?.detail ?? "Error al cambiar el estado",
+      );
+    } finally {
+      setLoadingEst(false);
+    }
+  };
+
+  return (
+    <div className="op-form" style={{ paddingTop: "1.1rem" }}>
+      {/* Estado actual */}
+      <div className="op-apm-status">
+        <div className="op-apm-status__row">
+          <span className="op-apm-status__label">Estado actual</span>
+          <span
+            className={`op-apm-badge ${alpormayor?.estado ? "op-apm-badge--on" : "op-apm-badge--off"}`}
+          >
+            {alpormayor?.estado ? "✓ Habilitado" : "✗ Deshabilitado"}
+          </span>
+        </div>
+        <div className="op-apm-status__row">
+          <span className="op-apm-status__label">Cantidad mínima</span>
+          <span className="op-apm-status__val">
+            {alpormayor?.cantidad_minima ?? "—"} uds.
+          </span>
+        </div>
+      </div>
+
+      {/* Cambiar cantidad mínima */}
+      <form onSubmit={handleGuardarCantidad} style={{ marginBottom: "1rem" }}>
+        <div className="op-form__grid op-form__grid--single">
+          <div className="op-field">
+            <label>
+              Cantidad mínima para precio al por mayor
+              <InfoTrigger
+                onClick={() =>
+                  setInfo(
+                    "Define cuántas unidades debe comprar un cliente para acceder al precio al por mayor.",
+                  )
+                }
+              />
+            </label>
+            <input
+              type="number"
+              min="1"
+              placeholder="Ej: 10"
+              value={cantMin}
+              onChange={(e) => setCantMin(e.target.value)}
+            />
+          </div>
+        </div>
+        <button
+          type="submit"
+          className="op-btn op-btn--primary"
+          disabled={loadingCant}
+        >
+          {loadingCant ? "Guardando…" : "Guardar cantidad mínima ✓"}
+        </button>
+      </form>
+
+      {/* Cambiar estado */}
+      <button
+        type="button"
+        className={`op-btn ${alpormayor?.estado ? "op-btn--danger" : "op-btn--activate"}`}
+        disabled={loadingEst}
+        onClick={handleCambiarEstado}
+      >
+        {loadingEst
+          ? "Cambiando…"
+          : alpormayor?.estado
+            ? "🚫 Deshabilitar venta al por mayor"
+            : "✅ Habilitar venta al por mayor"}
+      </button>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
+      {info && <ModalInformacionInputs text={info} setmodal={setInfo} />}
    PÁGINA PRINCIPAL
 ══════════════════════════════════════════ */
 function PaginaOpciones() {
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
-  const [cedula,   setCedula]   = useState(null);
-  const [usuario,  setUsuario]  = useState(null);
-  const [tienda,   setTienda]   = useState(null);
-  const [loading,  setLoading]  = useState(true);
+  const [cedula, setCedula] = useState(null);
+  const [usuario, setUsuario] = useState(null);
+  const [tienda, setTienda] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [alpormayor, setalpormayor] = useState(null);
+  const Buscaralpormayor = async (id_usuario) => {
+    try {
+      const res = await TraerAlPorMayor(id_usuario);
+      setalpormayor(res.data);
+    } catch {}
+  };
 
   /* ── Auth + carga ── */
   useEffect(() => {
     const token = sessionStorage.getItem("token");
-    if (!token) { navigate("/login"); return; }
+    if (!token) {
+      navigate("/login");
+      return;
+    }
     const decode = jwtDecode(token);
     setUsername(decode.usuario?.split(" ")[0] ?? "Usuario");
     setCedula(decode.id);
     cargar(decode.id);
+    Buscaralpormayor(decode.id);
   }, []);
 
   const cargar = async (id) => {
@@ -337,7 +681,10 @@ function PaginaOpciones() {
     }
   };
 
-  const reload = () => cargar(cedula);
+  const reload = () => {
+    cargar(cedula);
+    Buscaralpormayor(cedula);
+  };
 
   return (
     <>
@@ -351,9 +698,12 @@ function PaginaOpciones() {
         <header className="op-header">
           <div>
             <p className="op-eyebrow">⚙️ Configuración</p>
-            <h1 className="op-title">Opciones <span>de tu cuenta</span></h1>
+            <h1 className="op-title">
+              Opciones <span>de tu cuenta</span>
+            </h1>
             <p className="op-subtitle">
-              Gestiona tu información personal, datos de la tienda y preferencias del sistema.
+              Gestiona tu información personal, datos de la tienda y
+              preferencias del sistema.
             </p>
           </div>
         </header>
@@ -365,14 +715,15 @@ function PaginaOpciones() {
           </div>
         ) : (
           <div className="op-content">
-
             {/* ── ID + info rápida ── */}
             <div className="op-id-banner">
               <div className="op-id-banner__avatar">
                 {usuario?.nombres?.[0]?.toUpperCase() ?? "U"}
               </div>
               <div className="op-id-banner__info">
-                <strong>{usuario?.nombres} {usuario?.apellidos}</strong>
+                <strong>
+                  {usuario?.nombres} {usuario?.apellidos}
+                </strong>
                 <span>{usuario?.correo}</span>
               </div>
               <div className="op-id-banner__meta">
@@ -382,32 +733,61 @@ function PaginaOpciones() {
                 </div>
                 <div className="op-id-pill op-id-pill--green">
                   <span className="op-id-pill__label">Rol</span>
-                  <span className="op-id-pill__val">{usuario?.rol ?? "tendero"}</span>
+                  <span className="op-id-pill__val">
+                    {usuario?.rol ?? "tendero"}
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* ── Secciones ── */}
             <div className="op-sections">
-
               <SeccionCard icon="👤" title="Datos personales" defaultOpen>
-                <FormUsuario usuario={usuario} cedula={cedula} onGuardado={reload} />
+                <FormUsuario
+                  usuario={usuario}
+                  cedula={cedula}
+                  onGuardado={reload}
+                />
               </SeccionCard>
 
               <SeccionCard icon="🔒" title="Seguridad — Cambiar contraseña">
                 <FormContrasena cedula={cedula} />
               </SeccionCard>
 
-              <SeccionCard icon="🏪" title="Información de la tienda" badge={tienda?.nombre}>
-                <FormTienda tienda={tienda} cedula={cedula} onGuardado={reload} />
+              <SeccionCard
+                icon="🏪"
+                title="Información de la tienda"
+                badge={tienda?.nombre}
+              >
+                <FormTienda
+                  tienda={tienda}
+                  cedula={cedula}
+                  onGuardado={reload}
+                />
+              </SeccionCard>
+
+              <SeccionCard
+                icon="🏷️"
+                title="Venta al por mayor"
+                badge={alpormayor?.estado ? "Habilitada" : "Deshabilitada"}
+              >
+                <FormAlPorMayor
+                  alpormayor={alpormayor}
+                  cedula={cedula}
+                  onActualizado={() => Buscaralpormayor(cedula)}
+                />
               </SeccionCard>
 
               <SeccionCard icon="📞" title="Contacto y soporte">
                 <div className="op-contact-grid">
                   {[
-                    { icon: "✉️", label: "Correo de soporte",   val: CONTACTO.email },
-                    { icon: "💬", label: "WhatsApp",             val: CONTACTO.whatsapp },
-                    { icon: "🌐", label: "Sitio web",            val: CONTACTO.web },
+                    {
+                      icon: "✉️",
+                      label: "Correo de soporte",
+                      val: CONTACTO.email,
+                    },
+                    { icon: "💬", label: "WhatsApp", val: CONTACTO.whatsapp },
+                    { icon: "🌐", label: "Sitio web", val: CONTACTO.web },
                   ].map(({ icon, label, val }) => (
                     <div key={label} className="op-contact-item">
                       <span className="op-contact-item__icon">{icon}</span>
@@ -425,17 +805,19 @@ function PaginaOpciones() {
                   <div className="op-about__brand">
                     <span className="op-about__letter">N</span>
                     <div>
-                      <strong>NWBIQ<span>Shop</span></strong>
+                      <strong>
+                        NWBIQ<span>Shop</span>
+                      </strong>
                       <p>Plataforma de e-commerce para pequeñas tiendas</p>
                     </div>
                   </div>
                   <div className="op-about__specs">
                     {[
-                      { label: "Versión",          val: VERSION },
-                      { label: "Backend",          val: "FastAPI + SQLAlchemy" },
-                      { label: "Frontend",         val: "React + Vite" },
-                      { label: "Base de datos",    val: "MySQL / PostgreSQL" },
-                      { label: "Autenticación",    val: "JWT" },
+                      { label: "Versión", val: VERSION },
+                      { label: "Backend", val: "FastAPI + SQLAlchemy" },
+                      { label: "Frontend", val: "React + Vite" },
+                      { label: "Base de datos", val: "MySQL / PostgreSQL" },
+                      { label: "Autenticación", val: "JWT" },
                       { label: "Tu ID de usuario", val: cedula },
                     ].map(({ label, val }) => (
                       <div key={label} className="op-spec-row">
@@ -446,7 +828,6 @@ function PaginaOpciones() {
                   </div>
                 </div>
               </SeccionCard>
-
             </div>
           </div>
         )}

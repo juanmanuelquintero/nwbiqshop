@@ -6,7 +6,13 @@ import { Saturation, Hue } from "@uiw/react-color";
 import { hsvaToHex, hexToHsva } from "@uiw/color-convert";
 import Navbar from "../components/Navbar";
 import { mostrarAlerta } from "../utils/alerts";
-import { TraerEstilos, ModificarEstilos } from "../api/axios";
+import ModalInformacionInputs from "../components/InformacionInputs";
+import {
+  TraerEstilos,
+  ModificarEstilos,
+  TraerPlantillaTienda,
+  ActualizarPlantilla,
+} from "../api/axios";
 import "../styles/estilos.css";
 import {
   CarritoCompras,
@@ -16,6 +22,19 @@ import {
   Brocha,
   Touch,
 } from "../utils/icons";
+
+function InfoTrigger({ onClick }) {
+  return (
+    <button
+      type="button"
+      className="est-info-trigger"
+      onClick={onClick}
+      aria-label="Ver información"
+    >
+      !
+    </button>
+  );
+}
 
 /* ══════════════════════════════════════════
    Definición de los campos de color
@@ -139,7 +158,7 @@ function ColorPickerPopover({ value, onChange, onClose }) {
 /* ══════════════════════════════════════════
    Preview de la tienda
 ══════════════════════════════════════════ */
-function TiendaPreview({ colores }) {
+function TiendaPreview({ colores, plantilla }) {
   const {
     color_principal = "#2259d7",
     color_secundario = "#2259d7",
@@ -149,24 +168,28 @@ function TiendaPreview({ colores }) {
     color_botones = "#35a4ec",
   } = colores;
 
+  const esPlantilla1 = plantilla === "1";
+
   return (
-    <div className="est-preview">
+    <div className={`est-preview est-preview--p${plantilla}`}>
       {/* Navbar simulado */}
       <div
         className="est-preview__navbar"
         style={{
-          background: `linear-gradient(
-          to right,
-            ${color_principal} 0%,
-            ${color_principal} 25%,
-            ${color_secundario + "50"} 100%
-          )`,
+          background: esPlantilla1
+            ? color_principal
+            : `linear-gradient(to right, ${color_principal} 0%, ${color_secundario + "50"} 100%)`,
           boxShadow: `0px 0px 25px ${color_secundario + "95"}`,
         }}
       >
         <span className="est-preview__brand" style={{ color: title_color }}>
-          MiTienda
+          {esPlantilla1 ? "Mango Shop" : "MiTienda"}
         </span>
+        {esPlantilla1 && (
+          <span className="est-preview__nav-links">
+            INICIO&nbsp;&nbsp; CATÁLOGO
+          </span>
+        )}
         <div className="est-preview__nav-right">
           <CarritoCompras width="30" height="30" fill={color_carrito} />
         </div>
@@ -179,60 +202,28 @@ function TiendaPreview({ colores }) {
       >
         <div
           className="est-preview__store-card"
-          style={{
-            backgroundColor: color_principal,
-          }}
+          style={{ backgroundColor: color_principal }}
         >
-          <h2 style={{ color: title_color }}>Conócenos</h2>
-
+          <span
+            className="est-preview__eyebrow"
+            style={{ color: color_botones }}
+          >
+            {esPlantilla1 ? "NUEVA COLECCIÓN" : "LO MEJOR PARA TI"}
+          </span>
+          <h2 style={{ color: title_color }}>
+            {esPlantilla1 ? "Tu estilo, tu historia" : "Tecnología que inspira"}
+          </h2>
           <p className="est-store-description" style={{ color: text_color }}>
-            Somos una tienda comprometida con ofrecer productos de calidad y una
-            excelente experiencia para nuestros clientes (esta es la descripcion
-            de tu tienda, si gustas puedes cambiar todos estos datos desde
-            opciones).
+            {esPlantilla1
+              ? "Piezas escogidas para acompañarte todos los días."
+              : "Descubre productos pensados para hacer más fácil tu día."}
           </p>
-
-          <div className="est-store-info">
-            <div>
-              <span className="est-store-label" style={{ color: text_color }}>
-                Teléfono:
-              </span>
-
-              <span className="est-store-value" style={{ color: text_color }}>
-                Teléfono de tu tienda (si tu tienda cuenta con un nuemero
-                telefonico)
-              </span>
-            </div>
-
-            <div>
-              <span className="est-store-label" style={{ color: text_color }}>
-                Nos dedicamos a:
-              </span>
-
-              <span className="est-store-value" style={{ color: text_color }}>
-                A lo que tu tienda se dedica
-              </span>
-            </div>
-
-            <div>
-              <span className="est-store-label" style={{ color: text_color }}>
-                Dirección:
-              </span>
-
-              <span className="est-store-value" style={{ color: text_color }}>
-                Dirección de tu tienda (si cuentas con una direccion fisica)
-              </span>
-            </div>
-          </div>
-
-          <div className="est-store-about">
-            <h3 style={{ color: title_color }}>Nuestra tienda</h3>
-
-            <p style={{ color: text_color }}>
-              Encuentra todo lo que necesitas en un solo lugar. Explora nuestro
-              catálogo y descubre productos pensados especialmente para ti.
-            </p>
-          </div>
+          <button
+            className="est-preview__hero-btn"
+            style={{ background: color_botones }}
+          >
+            {esPlantilla1 ? "EXPLORAR" : "VER CATÁLOGO"}
+          </button>
         </div>
       </div>
 
@@ -262,7 +253,9 @@ function TiendaPreview({ colores }) {
               className="est-preview__card-name"
               style={{ color: title_color }}
             >
-              Producto {n}
+              {esPlantilla1
+                ? ["Vestido Aura", "Bolso Siena", "Lentes Sol"][n - 1]
+                : `Producto ${n}`}
             </p>
             <p
               className="est-preview__card-price"
@@ -278,7 +271,7 @@ function TiendaPreview({ colores }) {
                 fontWeight: "bold",
               }}
             >
-              VER
+              {esPlantilla1 ? "COMPRAR" : "VER"}
             </button>
           </div>
         ))}
@@ -369,6 +362,48 @@ function PaginaEstilos() {
   const [saving, setSaving] = useState(false);
   const [colores, setColores] = useState(DEFAULTS);
   const [original, setOriginal] = useState(DEFAULTS); // para detectar cambios
+  const [plantillaPreview, setPlantillaPreview] = useState("1");
+  const [plantillaGuardada, setPlantillaGuardada] = useState("1");
+  const [actualizandoPlantilla, setActualizandoPlantilla] = useState(false);
+  const [info, setInfo] = useState(null);
+
+  const whatsappUrl =
+    "https://wa.me/1348756304?text=" +
+    encodeURIComponent(
+      "hola, quiero cotizar la creacion de una plantilla personalizada",
+    );
+  const ActualizarP = async () => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      mostrarAlerta("error", "No cuenta con un token válido");
+      navigate("/login");
+      return;
+    }
+    const decode = jwtDecode(token);
+    setActualizandoPlantilla(true);
+    try {
+      await ActualizarPlantilla({
+        id_usuario: decode.id,
+        plantilla: parseInt(plantillaPreview),
+      });
+      setPlantillaGuardada(plantillaPreview);
+      mostrarAlerta("success", "Se actualizo la plantilla");
+    } catch {
+      mostrarAlerta("error", "no se pudo actualizar la plantilla de la tienda");
+    } finally {
+      setActualizandoPlantilla(false);
+    }
+  };
+  const TraerPlantilla = async (id_usuario) => {
+    try {
+      const res = await TraerPlantillaTienda(id_usuario);
+      const plantilla = String(res.data);
+      setPlantillaPreview(plantilla);
+      setPlantillaGuardada(plantilla);
+    } catch {
+      mostrarAlerta("error", "no se pudo traer la plantilla de la tienda");
+    }
+  };
 
   /* ── Auth + carga ── */
   useEffect(() => {
@@ -382,6 +417,7 @@ function PaginaEstilos() {
     setUsername(decode.usuario?.split(" ")[0] ?? "Usuario");
     setUserId(decode.id);
     cargarEstilos(decode.id);
+    TraerPlantilla(decode.id);
   }, []);
 
   const cargarEstilos = async (id) => {
@@ -451,6 +487,15 @@ function PaginaEstilos() {
             </p>
           </div>
           <div className="est-header__actions">
+            <button
+              className="est-btn est-btn--template"
+              onClick={() => ActualizarP(userId)}
+              disabled={
+                actualizandoPlantilla || plantillaPreview === plantillaGuardada
+              }
+            >
+              {actualizandoPlantilla ? "Cambiando..." : "Cambiar plantilla"}
+            </button>
             {hayCambios && (
               <button className="est-btn est-btn--ghost" onClick={handleReset}>
                 ↺ Restaurar
@@ -475,7 +520,16 @@ function PaginaEstilos() {
           <div className="est-layout">
             {/* ── Columna izquierda: selectores ── */}
             <div className="est-selectors">
-              <p className="est-section-title">Paleta de colores</p>
+              <p className="est-section-title">
+                Paleta de colores
+                <InfoTrigger
+                  onClick={() =>
+                    setInfo(
+                      "Personaliza los colores principales de tu tienda. La vista previa se actualiza al instante, pero debes guardar los cambios para aplicarlos públicamente.",
+                    )
+                  }
+                />
+              </p>
               <p className="est-section-hint">
                 Haz clic en el cuadro de color para abrir la rueda de selección.
               </p>
@@ -505,15 +559,65 @@ function PaginaEstilos() {
 
             {/* ── Columna derecha: preview ── */}
             <div className="est-preview-col">
-              <p className="est-section-title">Vista previa de la tienda</p>
-              <p className="est-section-hint">
-                Así se verá tu tienda con la paleta seleccionada.
-              </p>
-              <TiendaPreview colores={colores} />
+              <div className="est-preview-heading">
+                <div>
+                  <p className="est-section-title">
+                    Vista previa de la tienda
+                    <InfoTrigger
+                      onClick={() =>
+                        setInfo(
+                          "Esta vista muestra cómo se verá tu tienda con los colores y la plantilla seleccionados. Es solo una previsualización hasta guardar los cambios.",
+                        )
+                      }
+                    />
+                  </p>
+                  <p className="est-section-hint">
+                    Así se verá tu tienda con la paleta seleccionada.
+                  </p>
+                </div>
+                <label className="est-template-select">
+                  <span>
+                    Plantilla
+                    <InfoTrigger
+                      onClick={() =>
+                        setInfo(
+                          "La plantilla define la estructura visual de tu tienda pública. Selecciona una opción para verla en la previsualización y confirma con Cambiar plantilla.",
+                        )
+                      }
+                    />
+                  </span>
+                  <select
+                    value={plantillaPreview}
+                    onChange={(e) => setPlantillaPreview(e.target.value)}
+                  >
+                    <option value="1">Plantilla 1</option>
+                    <option value="2">Plantilla 2</option>
+                  </select>
+                </label>
+              </div>
+              <TiendaPreview colores={colores} plantilla={plantillaPreview} />
+              <div className="est-custom-template">
+                <div>
+                  <strong>¿Tienes en mente otro estilo?</strong>
+                  <p>
+                    Contáctate con nosotros para hacerte tu propia tienda a tu
+                    gusto y como quieras.
+                  </p>
+                </div>
+                <a
+                  className="est-btn est-btn--contact"
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Contáctanos
+                </a>
+              </div>
             </div>
           </div>
         )}
       </div>
+      {info && <ModalInformacionInputs text={info} setmodal={setInfo} />}
     </>
   );
 }

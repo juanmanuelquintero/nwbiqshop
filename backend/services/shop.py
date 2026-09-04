@@ -4,6 +4,11 @@ from models.styles import Estilos
 from models.promociones import Promocion, PromocionProducto, PromocionUnitaria
 from models.products import Producto, ProductoSimple, ProductoColores, ProductoVariante
 from models.collections import Coleccion, ColeccionProducto
+from models.combos import Combo, ComboAlimento
+from models.colecciones_alimentos import ColeccionAlimentos, ColeccionAlimentoRelacion
+from models.alimentos import Alimento
+from models.alpormayor import AlPorMayor
+from services.notificaciones import Crearnotificaion
 
 
 def _primera_imagen(db, producto: Producto) -> str | None:
@@ -28,9 +33,7 @@ def crear_tienda(db, datos):
         nombre=datos["nombre"],
         dominio=datos["dominio"],
         descripcion=datos["descripcion"],
-        sueldo_mensual=datos["sueldo_mensual"],
         actividad=datos["actividad"],
-        pasarela_pagos=datos["pasarela_pagos"],
         logo=None,
         direccion=datos["direccion"],
         telefono=datos["telefono"]
@@ -44,11 +47,21 @@ def crear_tienda(db, datos):
         id_tienda = nueva_tienda.id
     )
 
-    crearpromocion = Promocion(
-          id_tienda = nueva_tienda.id
-    )
+    if datos["actividad"] == "Venta de alimentos":
+        nueva_tienda.plantilla = 3
+
+    if datos["actividad"] != "Venta de alimentos":
+        crearpromocion = Promocion(
+            id_tienda = nueva_tienda.id
+        )
+
+        crearalpormayor = AlPorMayor(
+             id_tienda = nueva_tienda.id
+        )
+        db.add(crearalpormayor)
+        db.add(crearpromocion)
+
     db.add(crearestilos)
-    db.add(crearpromocion)
     db.commit()
 
     return nueva_tienda
@@ -100,12 +113,6 @@ def modificartienda(db, datos):
     if datos.descripcion is not None:
             buscartienda.descripcion = datos.descripcion
 
-    if datos.sueldo_mensual is not None:
-            buscartienda.sueldo_mensual = datos.sueldo_mensual
-
-    if datos.actividad is not None:
-            buscartienda.actividad = datos.actividad
-
     if datos.pasarela_pagos is not None:
             buscartienda.pasarela_pagos = datos.pasarela_pagos
 
@@ -120,9 +127,149 @@ def modificartienda(db, datos):
 
     db.commit()
     db.refresh(buscartienda)
+    Crearnotificaion(db, buscartienda.id, "Se actualizaron los datos de la tienda", "tienda")
 
     return "tienda modificada"
 
+def traertiendaalimentos(db, dominio):
+    traerdatostienda = db.query(Shop).filter(
+            Shop.dominio == dominio
+        ).first()
+     
+    if not traerdatostienda:
+        raise HTTPException(status_code=404, detail="Tienda no encontrada")
+
+    if not traerdatostienda.estado:
+        raise HTTPException(status_code=403, detail="Esta tienda no está disponible")
+
+    buscarestilos = db.query(Estilos).filter(
+            Estilos.id_tienda == traerdatostienda.id
+        ).first()
+
+    estilos_data = None
+    if buscarestilos:
+        estilos_data = {
+            "color_principal":  buscarestilos.color_principal,
+            "color_secundario": buscarestilos.color_secundario,
+            "title_color":      buscarestilos.title_color,
+            "text_color":       buscarestilos.text_color,
+            "color_carrito":    buscarestilos.color_carrito,
+            "color_botones":    buscarestilos.color_botones,
+        }
+
+    # ── Combos con alimentos enriquecidos ────────────────
+    buscarcombos = db.query(Combo).filter(
+        Combo.id_tienda == traerdatostienda.id,
+        Combo.estado == True
+    ).all()
+
+    combos = []
+    for c in buscarcombos:
+        relaciones = db.query(ComboAlimento).filter(
+            ComboAlimento.combo_id == c.id
+        ).all()
+
+        alimentos_combo = []
+        for rel in relaciones:
+            ali = db.query(Alimento).filter(
+                Alimento.id == rel.alimento_id,
+                Alimento.estado == True
+            ).first()
+            if ali:
+                alimentos_combo.append({
+                    "alimento_id":  ali.id,
+                    "nombre":       ali.nombre,
+                    "descripcion":  ali.descripcion,
+                    "precio":       ali.precio,
+                    "imagen":       ali.imagen,
+                    "disponible":   ali.disponible,
+                    "cantidad":     rel.cantidad,
+                })
+
+        combos.append({
+            "id":          c.id,
+            "nombre":      c.nombre,
+            "descripcion": c.descripcion,
+            "precio":      c.precio,
+            "estado":      c.estado,
+            "alimentos":   alimentos_combo,
+        })
+
+    # ── Colecciones con alimentos enriquecidos ────────────
+    buscarcolecciones = db.query(ColeccionAlimentos).filter(
+        ColeccionAlimentos.id_tienda == traerdatostienda.id,
+        ColeccionAlimentos.estado == True
+    ).all()
+
+    coleccionesproductos = []
+    ids_alimentos_en_colecciones = set()
+    for col in buscarcolecciones:
+        relaciones_col = db.query(ColeccionAlimentoRelacion).filter(
+            ColeccionAlimentoRelacion.coleccion_id == col.id
+        ).all()
+
+        alimentos_col = []
+        for rel in relaciones_col:
+            ali = db.query(Alimento).filter(
+                Alimento.id == rel.alimento_id,
+                Alimento.estado == True,
+                Alimento.disponible == True
+            ).first()
+            if ali:
+                ids_alimentos_en_colecciones.add(ali.id)
+                alimentos_col.append({
+                    "alimento_id":        ali.id,
+                    "nombre":             ali.nombre,
+                    "descripcion":        ali.descripcion,
+                    "precio":             ali.precio,
+                    "imagen":             ali.imagen,
+                    "disponible":         ali.disponible,
+                    "tiempo_preparacion": ali.tiempo_preparacion,
+                })
+
+        coleccionesproductos.append({
+            "id":          col.id,
+            "titulo":      col.titulo,
+            "descripcion": col.descripcion,
+            "estado":      col.estado,
+            "alimentos":   alimentos_col,
+        })
+
+    # ── Alimentos que no pertenecen a una colección ──────
+    alimentos_sueltos = []
+    buscar_alimentos_sueltos = db.query(Alimento).filter(
+        Alimento.id_tienda == traerdatostienda.id,
+        Alimento.estado == True,
+        Alimento.disponible == True,
+    ).all()
+
+    for ali in buscar_alimentos_sueltos:
+        if ali.id not in ids_alimentos_en_colecciones:
+            alimentos_sueltos.append({
+                "alimento_id":        ali.id,
+                "nombre":             ali.nombre,
+                "descripcion":        ali.descripcion,
+                "precio":             ali.precio,
+                "imagen":             ali.imagen,
+                "disponible":         ali.disponible,
+                "tiempo_preparacion": ali.tiempo_preparacion,
+            })
+
+    return {
+        "nombre":         traerdatostienda.nombre,
+        "descripcion":    traerdatostienda.descripcion,
+        "actividad":      traerdatostienda.actividad,
+        "pasarela_pagos": traerdatostienda.pasarela_pagos,
+        "estado":         traerdatostienda.estado,
+        "direccion":      traerdatostienda.direccion,
+        "telefono":       traerdatostienda.telefono,
+        "logo":           traerdatostienda.logo,
+        "plantilla":      traerdatostienda.plantilla,
+        "estilos":        estilos_data,
+        "combos":         combos,
+        "colecciones":    coleccionesproductos,
+        "alimentos_sueltos": alimentos_sueltos,
+    }
 
 def traertiendaclintes(db, dominio):
     traerdatostienda = db.query(Shop).filter(
@@ -134,6 +281,9 @@ def traertiendaclintes(db, dominio):
 
     if not traerdatostienda.estado:
         raise HTTPException(status_code=403, detail="Esta tienda no está disponible")
+
+    if traerdatostienda.actividad == "Venta de alimentos":
+         return traertiendaalimentos(db, dominio)
 
     buscarestilos = db.query(Estilos).filter(
         Estilos.id_tienda == traerdatostienda.id
@@ -151,6 +301,10 @@ def traertiendaclintes(db, dominio):
         Coleccion.id_tienda == traerdatostienda.id,
         Coleccion.estado == True
     ).all()
+
+    buscaralpormayor = db.query(AlPorMayor).filter(
+         AlPorMayor.id_tienda == traerdatostienda.id
+    ).first()
 
     coleccionesactivas = []
 
@@ -193,6 +347,7 @@ def traertiendaclintes(db, dominio):
                     "nombre":      prod.nombre,
                     "descripcion": prod.descripcion,
                     "precio":      prod.precio,
+                    "precio_alpormayor": prod.precio_alpormayor,
                     "imagen":      _primera_imagen(db, prod),
                     "tipo":        prod.tipo,
                     "descuento":   descuento
@@ -219,24 +374,23 @@ def traertiendaclintes(db, dominio):
                 precio_con_descuento = round(
                     producto.precio * (1 - buscarpromociones.descuento / 100)
                 )
+                precio_alpormayor_descuento = None
+
+                if producto.precio_alpormayor is not None:
+                    precio_alpormayor_descuento = round(
+                        float(producto.precio_alpormayor) * (1 - buscarpromociones.descuento / 100)
+                    )
                 productos_promo_general.append({
                     "id": producto.id,
                     "nombre": producto.nombre,
                     "descripcion": producto.descripcion,
                     "precio_original": producto.precio,
                     "precio_final": precio_con_descuento,
+                    "precio_alpormayor": precio_alpormayor_descuento,
                     "descuento": buscarpromociones.descuento,
                     "imagen": _primera_imagen(db, producto),
                     "tipo": producto.tipo,
                 })
-
-    buscarproductos = db.query(Producto).filter(
-         Producto.id_tienda == traerdatostienda.id,
-         Producto.estado == True
-    ).all()
-    if buscarproductos:
-        for pro in buscarproductos:
-             estaenunacoleccion = db.query(Coleccion)
 
     productos_promo_unitaria = []
     for pu in buscarpromocionunitaria:
@@ -250,12 +404,20 @@ def traertiendaclintes(db, dominio):
             precio_con_descuento = round(
                 producto.precio * (1 - pu.descuento / 100)
             )
+            
+            precio_alpormayor_descuento = None
+                            
+            if producto.precio_alpormayor is not None:
+                precio_alpormayor_descuento = round(
+                    float(producto.precio_alpormayor) * (1 - buscarpromociones.descuento / 100)
+                )
             productos_promo_unitaria.append({
                 "id": producto.id,
                 "nombre": producto.nombre,
                 "descripcion": producto.descripcion,
                 "precio_original": producto.precio,
                 "precio_final": precio_con_descuento,
+                "precio_alpormayor": precio_alpormayor_descuento,
                 "descuento": pu.descuento,
                 "imagen": _primera_imagen(db, producto),
                 "tipo": producto.tipo,
@@ -297,7 +459,8 @@ def traertiendaclintes(db, dominio):
         "datospromocion":            promo_data,
         "productos_promo_general":   productos_promo_general,
         "productos_promo_unitaria":  productos_promo_unitaria,
-        "colecciones": coleccionesactivas
+        "colecciones":               coleccionesactivas,
+        "datos_alpormayor":          buscaralpormayor
     }
 
 def buscarproductossueltos(db, dominio):
@@ -357,6 +520,7 @@ def buscarproductossueltos(db, dominio):
                 "nombre":      pro.nombre,
                 "descripcion": pro.descripcion,
                 "precio":      pro.precio,
+                "precio_alpormayor": pro.precio_alpormayor,
                 "imagen":      _primera_imagen(db, pro),
                 "tipo":        pro.tipo,
                 "descuento":   0,
@@ -392,3 +556,29 @@ def buscartiendaclientecarrito(db, dominio):
      }
 
      return datos
+
+def traerplantillatienda(db, id_usuario):
+     buscartienda = db.query(Shop).filter(
+          Shop.usuario_id == id_usuario
+     ).first()
+
+     if not buscartienda:
+          raise HTTPException(status_code=400, detail="error no se encontro tienda asociada")
+
+     return buscartienda.plantilla
+
+def modificarplantilla(db, datos):
+    buscartienda = db.query(Shop).filter(
+        Shop.usuario_id == datos.id_usuario
+    ).first()
+
+    if not buscartienda:
+              raise HTTPException(status_code=400, detail="error no se encontro tienda asociada")
+
+    if datos.plantilla is not None:
+        buscartienda.plantilla = datos.plantilla
+
+    db.commit()
+    Crearnotificaion(db, buscartienda.id, "Se actualizo la plantilla", "tienda")
+
+    return "plantilla actualizada"

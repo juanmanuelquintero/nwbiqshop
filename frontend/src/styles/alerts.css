@@ -39,6 +39,12 @@
   isolation: isolate;
 }
 
+@media (max-width: 720px) {
+  .nwbiq-alert {
+    width: 250px;
+  }
+}
+
 /* ========================================= */
 /* ILUMINACIÓN INTERNA                      */
 /* ========================================= */

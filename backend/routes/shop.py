@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from config_db import get_db
-from services.shop import traer_tienda, modificartienda, traertiendaclintes, buscarproductossueltos
-from schemas.shop import ShopUpdate
+from services.shop import traer_tienda, modificartienda, traertiendaclintes, buscarproductossueltos, traerplantillatienda, modificarplantilla
+from schemas.shop import ShopUpdate, ShopPlantillaUpdate
 
 router = APIRouter()
 
@@ -22,3 +22,10 @@ def Traer_Tienda_Dominio(dominio: str, db: Session = Depends(get_db)):
 def Traer_Productos_Dominio(dominio: str, db: Session = Depends(get_db)):
     return buscarproductossueltos(db, dominio)
 
+@router.get("/traer-plantilla/{id_usuario}")
+def Traer_Plantilla(id_usuario: int, db: Session = Depends(get_db)):
+    return traerplantillatienda(db, id_usuario)
+
+@router.patch("/actualizar-plantilla")
+def Actualizar_Plantilla(datos: ShopPlantillaUpdate, db: Session = Depends(get_db)):
+    return modificarplantilla(db, datos)

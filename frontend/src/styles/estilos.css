@@ -112,6 +112,27 @@
   color: #8898b0;
   line-height: 1.5;
 }
+.est-info-trigger {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.35rem;
+  padding: 0;
+  border: 1px solid #9333ea;
+  border-radius: 50%;
+  background: #f5edff;
+  color: #9333ea;
+  font-size: 0.65rem;
+  font-weight: 850;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.est-info-trigger:hover {
+  background: #9333ea;
+  color: #fff;
+}
 
 /* ══════════════════════════════════════════
    GRID DE TARJETAS DE COLOR
@@ -313,6 +334,33 @@
   top: 1.5rem;
 }
 
+.est-preview-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.est-template-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 9rem;
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.est-template-select select {
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  background: #fff;
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
 .est-preview {
   border-radius: 1.1rem;
   border: 1px solid var(--color-border);
@@ -394,6 +442,14 @@
   font-size: 0.95rem;
   letter-spacing: -0.03em;
 }
+.est-preview__nav-links {
+  margin-left: auto;
+  margin-right: 1rem;
+  color: currentColor;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
 .est-preview__nav-right {
   display: flex;
   align-items: center;
@@ -430,6 +486,32 @@
   font-weight: 750;
   cursor: default;
   transition: background 0.3s;
+}
+.est-preview__eyebrow {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+}
+.est-preview__hero-btn {
+  padding: 0.5rem 1.1rem;
+  border: none;
+  border-radius: 0.5rem;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: default;
+}
+.est-preview--p1 .est-preview__store-card {
+  border-radius: 0.25rem;
+  text-align: left;
+}
+.est-preview--p1 .est-preview__hero {
+  padding: 1.15rem;
+}
+.est-preview--p2 .est-preview__store-card {
+  border-radius: 1rem;
 }
 
 /* Producto cards simuladas */
@@ -470,6 +552,55 @@
   font-weight: 750;
   cursor: default;
   transition: background 0.3s;
+}
+
+.est-custom-template {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.est-custom-template strong {
+  display: block;
+  color: var(--color-title);
+  font-size: 0.88rem;
+}
+.est-custom-template p {
+  max-width: 34rem;
+  margin: 0.25rem 0 0;
+  color: var(--color-text);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+.est-btn--contact {
+  flex-shrink: 0;
+  background: #168c55;
+  color: #fff;
+  text-decoration: none;
+}
+.est-btn--contact:hover {
+  background: #107346;
+}
+
+@media (max-width: 640px) {
+  .est-preview-heading,
+  .est-custom-template {
+    flex-direction: column;
+  }
+
+  .est-template-select,
+  .est-btn--contact {
+    width: 100%;
+  }
+
+  .est-custom-template p {
+    max-width: none;
+  }
 }
 
 /* ══════════════════════════════════════════

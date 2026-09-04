@@ -6,8 +6,6 @@ class ShopUpdate(BaseModel):
     nombre: str | None = None
     dominio: str | None = None
     descripcion: str | None = None
-    sueldo_mensual: str | None = None
-    actividad: str | None = None
     pasarela_pagos: bool | None = None
     logo: str | None = None
     direccion: str | None = None
@@ -18,3 +16,7 @@ class ShopUpdate(BaseModel):
 class ShopInactive(BaseModel):
     id: int
     usuario_id: int
+
+class ShopPlantillaUpdate(BaseModel):
+    id_usuario: int
+    plantilla: int

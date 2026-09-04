@@ -11,6 +11,11 @@ const formatPrice = (price) => {
 const productForCard = (product) => {
   const price = Number(product.precio);
   const discount = Number(product.descuento);
+  const finalPrice =
+    product.precio_final ??
+    (Number.isFinite(price) && Number.isFinite(discount) && discount > 0
+      ? price * (1 - discount / 100)
+      : product.precio);
   const ahorro =
     Number.isFinite(price) && Number.isFinite(discount) && discount > 0
       ? formatPrice(price * (discount / 100))
@@ -21,16 +26,25 @@ const productForCard = (product) => {
     name: product.nombre ?? product.name,
     image: product.imagen ?? product.image,
     highlight: product.descripcion ?? product.highlight,
-    currentPrice: product.currentPrice ?? formatPrice(product.precio),
-    originalPrice: product.originalPrice,
+    precio: product.precio_original ?? product.precio,
+    precio_final: finalPrice,
+    currentPrice: product.currentPrice ?? formatPrice(finalPrice),
+    originalPrice:
+      product.originalPrice ?? (discount > 0 ? formatPrice(price) : null),
     discount: product.discount ?? ahorro,
     badge: product.badge ?? (discount > 0 ? `-${discount}%` : null),
   };
 };
 
-export default function ProductSectionP2({ collection }) {
+export default function ProductSectionP2({
+  collection,
+  onProductSelect,
+  estadoAlPorMayor,
+  cantidadMinimaMayorista,
+}) {
   const name = collection.coleccion_nombre ?? collection.nombre;
-  const description = collection.coleccion_descripcion ?? collection.descripcion;
+  const description =
+    collection.coleccion_descripcion ?? collection.descripcion;
   const products = collection.productos ?? [];
   const id = `coleccion-${name.toLowerCase().replace(/\s/g, "-")}`;
 
@@ -42,7 +56,13 @@ export default function ProductSectionP2({ collection }) {
       </div>
       <div className="p2-product-grid">
         {products.map((product) => (
-          <ProductCardP2 key={product.id ?? product.nombre} product={productForCard(product)} />
+          <ProductCardP2
+            key={product.id ?? product.nombre}
+            product={productForCard(product)}
+            onViewDetails={onProductSelect}
+            estadoAlPorMayor={estadoAlPorMayor}
+            cantidadMinimaMayorista={cantidadMinimaMayorista}
+          />
         ))}
       </div>
     </section>

@@ -5,6 +5,8 @@ import "../styles/crearcuenta.css";
 import { Crearcuenta } from "../api/axios";
 import { mostrarAlerta } from "../utils/alerts";
 import { useNavigate } from "react-router-dom";
+import ModalInfomacionInputs from "../components/InformacionInputs";
+import ModalSuscripcion from "../components/ModalSuscripcion";
 
 const STEPS = ["Sobre ti", "Tu tienda"];
 
@@ -42,11 +44,27 @@ function CrearCuenta() {
   const [nombreTienda, setNombreTienda] = useState("");
   const [dominio, setDominio] = useState("");
   const [descripcion, setDescripcion] = useState("");
-  const [sueldoMensual, setSueldoMensual] = useState("");
   const [actividad, setActividad] = useState("");
-  const [pasarelaPagos, setPasarelaPagos] = useState(true);
   const [telefonoTienda, setTelefonoTienda] = useState("");
   const [direccionTienda, setDireccionTienda] = useState("");
+  const [modalinfo, setmodalinfo] = useState(false);
+  const [informacion, setinformacion] = useState("");
+
+  const cambiarinformacion = (id) => {
+    switch (id) {
+      case 1:
+        return setinformacion(
+          "La descripción será visible para los visitantes de tu tienda pública. Puedes utilizar este espacio para presentar tu negocio, contar qué productos o servicios ofreces y compartir información relevante que ayude a tus clientes a conocer mejor tu tienda. Este campo se puede actualizar en cualquier momento dentro de tu tienda.",
+        );
+      case 2:
+        return setinformacion(
+          "Este es el enlace público de tu tienda. Se genera automáticamente cuando creas tu cuenta y podrás compartirlo con tus clientes para que visiten tu tienda en cualquier momento.",
+        );
+
+      default:
+        return setinformacion("");
+    }
+  };
 
   const limpiar = () => {
     setNombres("");
@@ -62,9 +80,7 @@ function CrearCuenta() {
     setNombreTienda("");
     setDominio("");
     setDescripcion("");
-    setSueldoMensual("");
     setActividad("");
-    setPasarelaPagos(true);
     setTelefonoTienda("");
     setDireccionTienda("");
   };
@@ -84,7 +100,6 @@ function CrearCuenta() {
       !nombreTienda ||
       !dominio ||
       !descripcion ||
-      !sueldoMensual ||
       !actividad
     ) {
       return mostrarAlerta("info", "Llene todos los campos obligatorios");
@@ -110,6 +125,7 @@ function CrearCuenta() {
         "El dominio de su tienda no contener espacios",
       );
     }
+
     try {
       const res = await Crearcuenta({
         cedula: cedula,
@@ -124,10 +140,7 @@ function CrearCuenta() {
         nombre: nombreTienda,
         dominio: dominio,
         descripcion: descripcion,
-        sueldo_mensual: sueldoMensual,
         actividad: actividad,
-        pasarela_pagos: pasarelaPagos,
-
         direccion_tienda: direccionTienda,
         telefono_tienda: telefonoTienda,
       });
@@ -311,7 +324,7 @@ function CrearCuenta() {
                     </label>
                     <input
                       type="email"
-                      placeholder="Ej: tienda@correo.com"
+                      placeholder="Ej: juan@gmail.com"
                       className="cc-field-input"
                       value={correo}
                       onChange={(e) => setCorreo(e.target.value)}
@@ -380,6 +393,15 @@ function CrearCuenta() {
                   <section className="cc-field">
                     <label>
                       Dominio <span className="cc-required">*</span>
+                      <span
+                        className="informacion-sobre-los-datos"
+                        onClick={() => {
+                          cambiarinformacion(2);
+                          setmodalinfo(true);
+                        }}
+                      >
+                        ¡
+                      </span>
                     </label>
                     <input
                       placeholder="Ej: Calzado-2026"
@@ -389,7 +411,19 @@ function CrearCuenta() {
                     />
                   </section>
                   <section className="cc-field cc-field--full">
-                    <label>Descripción de la tienda</label>
+                    <label>
+                      Descripción de la tienda
+                      <span className="cc-required">*</span>
+                      <span
+                        className="informacion-sobre-los-datos"
+                        onClick={() => {
+                          cambiarinformacion(1);
+                          setmodalinfo(true);
+                        }}
+                      >
+                        ¡
+                      </span>
+                    </label>
                     <textarea
                       rows={3}
                       placeholder="Cuéntanos brevemente sobre tu tienda..."
@@ -397,23 +431,6 @@ function CrearCuenta() {
                       value={descripcion}
                       onChange={(e) => setDescripcion(e.target.value)}
                     />
-                  </section>
-                  <section className="cc-field cc-field--full">
-                    <label>
-                      Saldo Mensual
-                      <span className="cc-required">*</span>
-                    </label>
-                    <select
-                      className="cc-field-input"
-                      value={sueldoMensual}
-                      onChange={(e) => setSueldoMensual(e.target.value)}
-                    >
-                      <option hidden>Seleccione uno</option>
-                      <option>0 - 1.000.000</option>
-                      <option>1.000.000 - 3.000.000</option>
-                      <option>3.000.000 - 5.000.000</option>
-                      <option>mas de 5.000.000</option>
-                    </select>
                   </section>
                   <section className="cc-field cc-field--full">
                     <label>
@@ -436,32 +453,17 @@ function CrearCuenta() {
                       <option>Venta de productos para el cuidado</option>
                       <option>Venta de artículos para el hogar</option>
                       <option>Venta de muebles</option>
-                      <option>Venta de decoración</option>
-                      <option>Venta de computadores y accesorios</option>
-                      <option>Venta de celulares y accesorios</option>
-                      <option>Venta de videojuegos y accesorios</option>
+                      <option>Venta de dispositivos tecnologicos</option>
+                      <option>Venta de videojuegos</option>
                       <option>Venta de libros</option>
-                      <option>Venta de papelería</option>
-                      <option>Venta de juguetes</option>
-                      <option>Venta de artículos para mascotas</option>
                       <option>Venta de alimentos</option>
                       <option>Otros</option>
                     </select>
                   </section>
                   <section className="cc-field">
                     <label>
-                      Necesita pasarela de pagos?
-                      <span className="cc-required">*</span>
+                      Telefono tienda<span className="cc-required">*</span>
                     </label>
-                    <input
-                      type="checkbox"
-                      className="cc-checkbox"
-                      checked={pasarelaPagos}
-                      onChange={(e) => setPasarelaPagos(e.target.checked)}
-                    />
-                  </section>
-                  <section className="cc-field">
-                    <label>Telefono tienda (opcional)</label>
                     <input
                       type="text"
                       placeholder="Ej: 3116726512"
@@ -516,6 +518,9 @@ function CrearCuenta() {
           </div>
         </div>
       </main>
+      {modalinfo && (
+        <ModalInfomacionInputs text={informacion} setmodal={setmodalinfo} />
+      )}
     </>
   );
 }

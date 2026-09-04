@@ -21,7 +21,7 @@ class Pedido(Base):
         index=True
     )
 
-    # Estado del pedido: pendiente | en proceso | enviado | entregado | cancelado
+    # Estado del pedido: pendiente | confirmado | enviado | cancelado
     estado = Column(
         String(50),
         default="pendiente",
@@ -34,7 +34,12 @@ class Pedido(Base):
         nullable=True
     )
 
+    nombresyapellidos = Column(String(100), nullable=True)
     correocliente = Column(String(100), nullable=True)
+    telefonocliente = Column(String(20), nullable=True)
+    ciudadcliente = Column(String(100), nullable=True)
+    direccioncliente = Column(String(200), nullable=True)
+    numeroguia = Column(String(300), nullable=True)
 
     fecha_creacion = Column(
         DateTime,
