@@ -24,7 +24,7 @@ from services.alimentos import (
 
 router = APIRouter()
 
-BASE_URL    = "https://nwbiqshop.nwbiq.com/api"
+BASE_URL    = "hhttp://localhost:8000"
 ALIM_DIR    = "alimentos"
 
 

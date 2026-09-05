@@ -399,7 +399,7 @@ function PaginaDashboard() {
             <button
               className="db-url-visit"
               disabled={!estado}
-              onClick={() => navigate(`/informacion/${dominio}`)}
+              onClick={() => navigate(`/tienda/${dominio}`)}
             >
               Visitar <span aria-hidden="true">↗</span>
             </button>

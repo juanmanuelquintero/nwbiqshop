@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "https://nwbiqshop.nwbiq.com/api";
+const API_URL = "http://localhost:8000";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -8,6 +8,11 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+export const TraerEstilosDominio = async (dominio) => {
+  const res = await api.get(`/traer-estilos-dominio/${dominio}`);
+  return res;
+};
 
 export const validarUsuario = async (correo, contraseña) => {
   const response = await api.post("/validar-usuario", {
@@ -573,6 +578,17 @@ export const TraerInformacionCliente = async (dominio) => {
 
 export const ActualizarTuInformacion = async (datos) => {
   const res = await api.patch("/actualizar-tu-informacion", datos);
+  return res;
+};
+
+export const ActualizarFotoTuInformacion = async (id_usuario, foto) => {
+  const datos = new FormData();
+  datos.append("id_usuario", id_usuario);
+  datos.append("foto", foto);
+
+  const res = await api.post("/actualizar-foto-tu-informacion", datos, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return res;
 };
 

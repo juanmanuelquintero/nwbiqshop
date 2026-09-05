@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
-import "../styles/tuinformacion.css";
-import { TraerInformacionCliente } from "../api/axios";
+import "../styles/tuinformacionpagina.css";
+import { TraerEstilosDominio, TraerInformacionCliente } from "../api/axios";
 import { mostrarAlerta } from "../utils/alerts";
 import { useEffect, useState } from "react";
 
@@ -8,6 +8,7 @@ function TuInformacion() {
   const { dominio } = useParams();
   const [cargando, setcargando] = useState(false);
   const [pagina404, setpagina404] = useState(false);
+  const [estilos, setEstilos] = useState(null);
   const [TuInformacion, setTuInformacion] = useState({
     tu_informacion: null,
     que_hago: [],
@@ -21,8 +22,12 @@ function TuInformacion() {
   const Traerlainformacion = async () => {
     setcargando(true);
     try {
-      const res = await TraerInformacionCliente(dominio);
-      setTuInformacion(res.data || {});
+      const [informacionRes, estilosRes] = await Promise.all([
+        TraerInformacionCliente(dominio),
+        TraerEstilosDominio(dominio),
+      ]);
+      setTuInformacion(informacionRes.data || {});
+      setEstilos(estilosRes.data || null);
     } catch (err) {
       mostrarAlerta("error", "no se encontro la informacion");
       setpagina404(true);
@@ -63,12 +68,24 @@ function TuInformacion() {
   }
 
   return (
-    <section className="tu-informacion">
+    <section
+      className="tu-informacion"
+      style={{
+        "--public-primary": estilos?.color_principal,
+        "--public-secondary": estilos?.color_secundario,
+        "--public-title": estilos?.title_color,
+        "--public-text": estilos?.text_color,
+        "--public-ink": estilos?.text_color,
+        "--public-secondary": estilos?.color_secundario,
+        "--public-cart": estilos?.color_carrito,
+        "--public-button": estilos?.color_botones,
+      }}
+    >
       {/* Encabezado */}
       <div className="tu-informacion__header">
         <div className="tu-informacion__photo">
           <img
-            src="https://i.pravatar.cc/500?img=47"
+            src={perfil?.foto || "https://i.pravatar.cc/500?img=47"}
             alt={`Foto de ${perfil?.nombre_completo || "el profesional"}`}
           />
         </div>
@@ -83,6 +100,13 @@ function TuInformacion() {
           </p>
 
           <p className="tu-informacion__location">📍 {perfil?.direccion}</p>
+
+          <a
+            className="tu-informacion__shop-button"
+            href={`https://nwbiqshop.nwbiq.com/tienda/${encodeURIComponent(dominio)}`}
+          >
+            Visitar tienda <span aria-hidden="true">→</span>
+          </a>
 
           <div
             className={`tu-informacion__status ${perfil?.disponibilidad ? "active" : "desactive"}`}
@@ -147,7 +171,7 @@ function TuInformacion() {
       {/* Cómo funciona */}
       {comoFunciona.length > 0 && (
         <div className="tu-informacion__section">
-          <h2>¿Cómo funciona un pedido por encargo?</h2>
+          <h2>¿Cómo funciona?</h2>
 
           <div className="tu-informacion__steps">
             {comoFunciona.map((elemento, indice) => (

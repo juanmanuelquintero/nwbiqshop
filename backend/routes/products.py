@@ -33,7 +33,7 @@ import os
 
 router = APIRouter()
 
-BASE_URL = "https://nwbiqshop.nwbiq.com/api"
+BASE_URL = "http://localhost:8000"
 IMG_DIR  = "img"
 
 

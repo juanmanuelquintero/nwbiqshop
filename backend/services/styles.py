@@ -58,4 +58,32 @@ def traerestilos(db, idusuario):
           raise HTTPException(status_code=400, detail="error trayendo los estilos")
 
     return estilos
+
+def traerestilosdominio(db, dominio):
+    tienda = db.query(Shop).filter(
+        Shop.dominio == dominio
+    ).first()
+
+    if not tienda:
+        raise HTTPException(status_code=404, detail="Tienda no encontrada")
+
+    if not tienda.estado:
+        raise HTTPException(status_code=403, detail="Esta tienda no está disponible")
+
+    estilos = db.query(Estilos).filter(
+        Estilos.id_tienda == tienda.id
+    ).first()
+
+    if not estilos:
+        raise HTTPException(status_code=404, detail="Estilos no encontrados")
+
+    return {
+        "color_principal": estilos.color_principal,
+        "color_secundario": estilos.color_secundario,
+        "title_color": estilos.title_color,
+        "text_color": estilos.text_color,
+        "color_carrito": estilos.color_carrito,
+        "color_botones": estilos.color_botones,
+    }
+      
       

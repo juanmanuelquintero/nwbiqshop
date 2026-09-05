@@ -106,6 +106,14 @@ def actualizartuinformacion(db, datos):
     return tuinfo
 
 
+def actualizarfoto(db, id_usuario, url_foto):
+    tuinfo = _obtener_tuinfo(db, id_usuario)
+    tuinfo.foto = url_foto
+    db.commit()
+    db.refresh(tuinfo)
+    return tuinfo
+
+
 def crearquehago(db, datos):
     return _crear_hijo(db, QueHago, datos)
 

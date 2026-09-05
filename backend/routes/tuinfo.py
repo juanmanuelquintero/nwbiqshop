@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends
+import os
+import uuid
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from config_db import get_db
@@ -31,6 +34,7 @@ from services.tuinfo import (
     actualizarporqueTrabajarConmigo,
     actualizarquehago,
     actualizartuinformacion,
+    actualizarfoto,
     crearcomofunciona,
     crearinformacionservicio,
     crearmiexperiencia,
@@ -49,6 +53,11 @@ from services.tuinfo import (
 
 router = APIRouter()
 
+FOTOPERFIL_DIR = "fotoperfil"
+FOTOPERFIL_BASE_URL = "http://localhost:8000/fotoperfil"
+TIPOS_IMAGEN_PERMITIDOS = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+EXTENSIONES_IMAGEN_PERMITIDAS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+
 @router.get("/traer-tu-info/{id_usuario}")
 def TraerTuInfo(id_usuario: int, db: Session = Depends(get_db)):
     return traertuinfo(db, id_usuario)
@@ -60,6 +69,30 @@ def TraerLaInfo(dominio: str, db: Session = Depends(get_db)):
 @router.patch("/actualizar-tu-informacion")
 def ActualizarTuInformacion(datos: TuInformacionUpdate, db: Session = Depends(get_db)):
     return actualizartuinformacion(db, datos)
+
+
+@router.post("/actualizar-foto-tu-informacion")
+def ActualizarFotoTuInformacion(
+    id_usuario: int = Form(...),
+    foto: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    extension = os.path.splitext(foto.filename or "")[1].lower()
+    if foto.content_type not in TIPOS_IMAGEN_PERMITIDOS or extension not in EXTENSIONES_IMAGEN_PERMITIDAS:
+        raise HTTPException(
+            status_code=400,
+            detail="El archivo debe ser una imagen JPG, PNG, WEBP o GIF",
+        )
+
+    os.makedirs(FOTOPERFIL_DIR, exist_ok=True)
+    nombre_imagen = f"{uuid.uuid4().hex}{extension}"
+    ruta_imagen = os.path.join(FOTOPERFIL_DIR, nombre_imagen)
+
+    with open(ruta_imagen, "wb") as archivo:
+        archivo.write(foto.file.read())
+
+    url_foto = f"{FOTOPERFIL_BASE_URL}/{nombre_imagen}"
+    return actualizarfoto(db, id_usuario, url_foto)
 
 
 @router.post("/crear-que-hago")

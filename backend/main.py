@@ -47,6 +47,7 @@ app.include_router(suscripciones_router)
 
 app.mount("/img", StaticFiles(directory="img"), name="img")
 app.mount("/alimentos", StaticFiles(directory="alimentos"), name="alimentos")
+app.mount("/fotoperfil", StaticFiles(directory="fotoperfil"), name="fotoperfil")
 
 @app.get("/heald")
 def servidor():

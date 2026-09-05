@@ -24,6 +24,11 @@ class TuInformacion(Base):
         nullable=True
     )
 
+    foto = Column(
+            String(200),
+            nullable=True
+        )
+
     dedicacion = Column(
         String(150),
         nullable=True

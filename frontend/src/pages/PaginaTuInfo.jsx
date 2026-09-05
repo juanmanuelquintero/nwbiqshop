@@ -6,6 +6,7 @@ import {
   ActualizarMisEspecialidades,
   ActualizarPorqueTrabajarConmigo,
   ActualizarQueHago,
+  ActualizarFotoTuInformacion,
   ActualizarTuInformacion,
   CrearComoFunciona,
   CrearInformacionServicio,
@@ -155,6 +156,9 @@ function PaginaTuInformacion() {
   const [userId, setUserId] = useState(null);
 
   const [tuInformacion, setTuInformacion] = useState({});
+  const [fotoSeleccionada, setFotoSeleccionada] = useState(null);
+  const [vistaPreviaFoto, setVistaPreviaFoto] = useState("");
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [nameuser, setnameuser] = useState("user");
   const [detalleSeleccionado, setDetalleSeleccionado] = useState(null);
 
@@ -173,6 +177,49 @@ function PaginaTuInformacion() {
       ...actual,
       [field]: value,
     }));
+  };
+
+  const seleccionarFoto = (event) => {
+    const archivo = event.target.files?.[0];
+
+    if (!archivo) return;
+
+    if (!archivo.type.startsWith("image/")) {
+      mostrarAlerta("error", "Selecciona un archivo de imagen válido");
+      event.target.value = "";
+      return;
+    }
+
+    setFotoSeleccionada(archivo);
+    setVistaPreviaFoto(URL.createObjectURL(archivo));
+  };
+
+  const actualizarFoto = async () => {
+    if (!fotoSeleccionada || !userId) {
+      mostrarAlerta("info", "Selecciona una foto antes de guardarla");
+      return;
+    }
+
+    setSubiendoFoto(true);
+
+    try {
+      const respuesta = await ActualizarFotoTuInformacion(
+        userId,
+        fotoSeleccionada,
+      );
+
+      setTuInformacion((actual) => ({
+        ...actual,
+        foto: respuesta.data?.foto || actual.foto,
+      }));
+      setFotoSeleccionada(null);
+      mostrarAlerta("success", "Foto de perfil actualizada correctamente");
+    } catch (error) {
+      console.error(error.response);
+      mostrarAlerta("error", "No fue posible actualizar la foto");
+    } finally {
+      setSubiendoFoto(false);
+    }
   };
 
   const cambiarElemento = (listKey, index, field, value) => {
@@ -467,6 +514,48 @@ function PaginaTuInformacion() {
                 onChange={cambiarTuInformacion}
               />
             ))}
+
+            <div className="tu-info-photo-upload">
+              <div className="tu-info-photo-upload__preview">
+                {vistaPreviaFoto || tuInformacion.foto ? (
+                  <img
+                    src={vistaPreviaFoto || tuInformacion.foto}
+                    alt="Vista previa de la foto de perfil"
+                  />
+                ) : (
+                  <span aria-hidden="true">✦</span>
+                )}
+              </div>
+
+              <div className="tu-info-photo-upload__content">
+                <span className="tu-info-photo-upload__eyebrow">
+                  IMAGEN DE PERFIL
+                </span>
+                <strong>Haz que tu perfil se sienta más personal</strong>
+                <p>Elige una foto JPG, PNG, WEBP o GIF.</p>
+
+                <div className="tu-info-photo-upload__actions">
+                  <label className="tu-info-btn tu-info-btn--photo-select">
+                    <span aria-hidden="true">＋</span>
+                    {fotoSeleccionada ? "Cambiar foto" : "Elegir foto"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={seleccionarFoto}
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    className="tu-info-btn tu-info-btn--photo-save"
+                    onClick={actualizarFoto}
+                    disabled={!fotoSeleccionada || subiendoFoto}
+                  >
+                    {subiendoFoto ? "Subiendo..." : "Guardar foto"}
+                  </button>
+                </div>
+              </div>
+            </div>
 
             <div className="tu-info-option-card">
               <div className="tu-info-option-icon">◷</div>

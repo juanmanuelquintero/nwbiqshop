@@ -597,6 +597,110 @@
 }
 
 /* =========================================================
+   FOTO DE PERFIL
+========================================================= */
+
+.tu-info-photo-upload {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 22px;
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f8fbff, #ffffff);
+  box-shadow: 0 10px 26px rgba(37, 99, 235, 0.07);
+}
+
+.tu-info-photo-upload__preview {
+  display: grid;
+  width: 104px;
+  height: 104px;
+  flex: 0 0 104px;
+  place-items: center;
+  overflow: hidden;
+  border: 5px solid #ffffff;
+  border-radius: 50%;
+  color: var(--tu-blue);
+  background: linear-gradient(135deg, #dbeafe, #ede9fe);
+  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.16);
+}
+
+.tu-info-photo-upload__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tu-info-photo-upload__preview span {
+  font-size: 28px;
+}
+
+.tu-info-photo-upload__content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tu-info-photo-upload__eyebrow {
+  color: var(--tu-blue);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.tu-info-photo-upload__content strong {
+  color: #1f2937;
+  font-size: 16px;
+}
+.tu-info-photo-upload__content p {
+  margin: 0;
+  color: var(--tu-text-soft);
+  font-size: 12px;
+}
+.tu-info-photo-upload__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 9px;
+}
+
+.tu-info-btn--photo-select,
+.tu-info-btn--photo-save {
+  min-height: 38px;
+  padding: 8px 13px;
+  font-size: 12px;
+}
+
+.tu-info-btn--photo-select {
+  color: var(--tu-blue);
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.tu-info-btn--photo-select:hover {
+  background: #dbeafe;
+}
+.tu-info-btn--photo-select input {
+  display: none;
+}
+.tu-info-btn--photo-save {
+  color: #ffffff;
+  background: var(--tu-blue);
+}
+.tu-info-btn--photo-save:hover {
+  background: var(--tu-blue-dark);
+}
+.tu-info-btn--photo-save:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+/* =========================================================
    OPTION CARDS
 ========================================================= */
 
